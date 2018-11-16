@@ -14,3 +14,6 @@
 # Developer IDEs etc.
 .idea/*
 .vscode/*
+
+# Other
+coverage.html
