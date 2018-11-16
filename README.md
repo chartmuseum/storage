@@ -1,5 +1,7 @@
 # chartmuseum/storage
 
+[![Codefresh build status](https://g.codefresh.io/api/badges/pipeline/chartmuseum/chartmuseum%2Fstorage%2Fmaster?type=cf-1)](https://g.codefresh.io/public/accounts/chartmuseum/pipelines/chartmuseum/storage/master)
+
 Go library providing a common interface for working across multiple storage backends.
 
 Supported storage backends:
