@@ -1,6 +1,8 @@
 # chartmuseum/storage
 
 [![Codefresh build status](https://g.codefresh.io/api/badges/pipeline/chartmuseum/chartmuseum%2Fstorage%2Fmaster?type=cf-1)](https://g.codefresh.io/public/accounts/chartmuseum/pipelines/chartmuseum/storage/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/chartmuseum/storage)](https://goreportcard.com/report/github.com/chartmuseum/storage)
+[![GoDoc](https://godoc.org/github.com/chartmuseum/storage?status.svg)](https://godoc.org/github.com/chartmuseum/storage)
 
 Go library providing a common interface for working across multiple storage backends.
 
@@ -14,6 +16,9 @@ Supported storage backends:
 - [Openstack Object Storage](https://developer.openstack.org/api-ref/object-store/)
 - [Oracle Cloud Infrastructure Object Storage](https://cloud.oracle.com/storage)
 
+*This code was originally part of the [Helm](https://github.com/helm/helm) project, [ChartMuseum](https://github.com/helm/chartmuseum),
+but has since been released as a standalone package for others to use in their own projects.*
+
 ## Primary Components
 
 ### Backend (interface)
@@ -21,7 +26,7 @@ Supported storage backends:
 `Backend` is a common interface that is implemented by all the supported storage backends and their associated types:
 
 ```go
-Backend interface {
+type Backend interface {
     ListObjects(prefix string) ([]Object, error)
     GetObject(path string) (Object, error)
     PutObject(path string, content []byte) error
@@ -34,18 +39,41 @@ Backend interface {
 `Object` is a struct that represents a single storage object:
 
 ```go
-Object struct {
+type Object struct {
     Path         string
     Content      []byte
     LastModified time.Time
 }
 ```
 
+### ObjectSliceDiff (struct)
+
+`ObjectSliceDiff` is a struct that represents overall changes between two `Object` slices:
+
+```go
+type ObjectSliceDiff struct {
+    Change  bool
+    Removed []Object
+    Added   []Object
+    Updated []Object
+}
+```
+
+### GetObjectSliceDiff (function)
+
+`GetObjectSliceDiff` is a function that takes two `Object` slices, compares them, and returns an `ObjectSliceDiff`:
+
+```go
+func GetObjectSliceDiff(os1 []Object, os2 []Object) ObjectSliceDiff
+```
+
+
 ## Usage
 
 ### Simple example
 
 The following is a simple program that will upload a file either to an Azure Blob Storage bucket (container) or a Google Cloud Storage bucket based on the command line options provided:
+
 ```go
 // Usage: go run example.go <cloud> <bucket> <file>
 
@@ -115,4 +143,7 @@ go run example.go google mybucket index.html
 
 ### Per backend
 
-TODO
+Each supported storage backend has its own type that implements the `Backend` interface.
+All available types are described in detail on [GoDoc](https://godoc.org/github.com/chartmuseum/storage).
+
+In addition, authentication methods are based on the runtime environment and vary from cloud to cloud.
