@@ -27,7 +27,6 @@ import (
 
 	"github.com/Azure/go-autorest/logger"
 	"github.com/Azure/go-autorest/tracing"
-	"github.com/Azure/go-autorest/version"
 )
 
 const (
@@ -175,7 +174,7 @@ func NewClientWithUserAgent(ua string) Client {
 		PollingDuration: DefaultPollingDuration,
 		RetryAttempts:   DefaultRetryAttempts,
 		RetryDuration:   DefaultRetryDuration,
-		UserAgent:       version.UserAgent(),
+		UserAgent:       UserAgent(),
 	}
 	c.Sender = c.sender()
 	c.AddToUserAgent(ua)
