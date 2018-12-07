@@ -54,6 +54,8 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		ocsBucket := os.Getenv("TEST_STORAGE_ORACLE_BUCKET")
 		ocsRegion := os.Getenv("TEST_STORAGE_ORACLE_REGION")
 		ocsCompartmentId := os.Getenv("TEST_STORAGE_ORACLE_COMPARTMENTID")
+		bosBucket := os.Getenv("TEST_STORAGE_BAIDU_BUCKET")
+		bosEndpoint := os.Getenv("TEST_STORAGE_BAIDU_ENDPOINT")
 		if s3Bucket != "" && s3Region != "" {
 			suite.StorageBackends["AmazonS3"] = Backend(NewAmazonS3Backend(s3Bucket, prefix, s3Region, "", ""))
 		}
@@ -71,6 +73,9 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		}
 		if ocsBucket != "" {
 			suite.StorageBackends["OracleCS"] = Backend(NewOracleCSBackend(ocsBucket, prefix, ocsRegion, ocsCompartmentId))
+		}
+		if bosBucket != "" {
+			suite.StorageBackends["BaiduCloudBOS"] = Backend(NewBaiDuBOSBackend(bosBucket, prefix, bosEndpoint))
 		}
 	}
 }

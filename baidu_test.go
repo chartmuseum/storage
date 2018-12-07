@@ -18,10 +18,10 @@ package storage
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"strconv"
 )
 
 type BaiduTestSuite struct {
@@ -30,7 +30,7 @@ type BaiduTestSuite struct {
 	NoPrefixBaiduBOSBackend *BaiduBOSBackend
 }
 
-const testCount = 100
+const bosTestCount = 100
 
 func (suite *BaiduTestSuite) SetupSuite() {
 	backend := NewBaiDuBOSBackend("fake-container-cant-exist-fbce123", "", "")
@@ -44,7 +44,7 @@ func (suite *BaiduTestSuite) SetupSuite() {
 	data := []byte("some object")
 	path := "deleteme.txt"
 
-	for i := 0; i < testCount; i++ {
+	for i := 0; i < bosTestCount; i++ {
 		newPath := strconv.Itoa(i) + path
 		err := suite.NoPrefixBaiduBOSBackend.PutObject(newPath, data)
 		suite.Nil(err, "no error putting deleteme.txt using Baidu Cloud BOS backend")
@@ -53,7 +53,7 @@ func (suite *BaiduTestSuite) SetupSuite() {
 
 func (suite *BaiduTestSuite) TearDownSuite() {
 	path := "deleteme.txt"
-	for i := 0; i < testCount; i++ {
+	for i := 0; i < bosTestCount; i++ {
 		newPath := strconv.Itoa(i) + path
 
 		err := suite.NoPrefixBaiduBOSBackend.DeleteObject(newPath)
@@ -67,7 +67,7 @@ func (suite *BaiduTestSuite) TestListObjects() {
 
 	objs, err := suite.NoPrefixBaiduBOSBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
-	suite.Equal(len(objs), testCount, "able to list objects")
+	suite.Equal(len(objs), bosTestCount, "able to list objects")
 }
 
 func (suite *BaiduTestSuite) TestGetObject() {
