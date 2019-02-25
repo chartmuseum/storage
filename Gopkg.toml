@@ -65,6 +65,10 @@
   branch = "master"
   name = "github.com/baidubce/bce-sdk-go"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/tencentyun/cos-go-sdk-v5"
+
 [prune]
   go-tests = true
   unused-packages = true

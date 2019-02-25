@@ -1,0 +1,3 @@
+[submodule "vendor/github.com/tencentyun/cos-go-sdk-v5"]
+	path = vendor/github.com/tencentyun/cos-go-sdk-v5
+	url = git@github.com:tencentyun/cos-go-sdk-v5.git
