@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	pathutil "path"
 
 	"github.com/gophercloud/gophercloud"
@@ -74,6 +75,17 @@ func NewOpenstackOSBackend(container string, prefix string, region string, caCer
 		panic(fmt.Sprintf("Openstack (environment): %s", err))
 	}
 	authOptions.AllowReauth = true
+
+	if authScope := getAuthScope(); authScope != nil {
+		authOptions.Scope = authScope
+	}
+
+	if userDomainName := os.Getenv("OS_USER_DOMAIN_NAME"); userDomainName != "" {
+		authOptions.DomainName = userDomainName
+	}
+	if userDomainID := os.Getenv("OS_USER_DOMAIN_ID"); userDomainID != "" {
+		authOptions.DomainID = userDomainID
+	}
 
 	// Create a custom HTTP client to handle reauth retry and custom CACERT if needed
 	roundTripper := ReauthRoundTripper{}
@@ -198,4 +210,34 @@ func (b OpenstackOSBackend) PutObject(path string, content []byte) error {
 func (b OpenstackOSBackend) DeleteObject(path string) error {
 	_, err := osObjects.Delete(b.Client, b.Container, pathutil.Join(b.Prefix, path), nil).Extract()
 	return err
+}
+
+func getAuthScope() *gophercloud.AuthScope {
+	scope := &gophercloud.AuthScope{}
+
+	// Scope to project by ID.
+	if projectID := os.Getenv("OS_PROJECT_ID"); projectID != "" {
+		scope.ProjectID = projectID
+		return scope
+	}
+
+	// Scope to project by name. Requires the project domain name or ID as well.
+	projectName := os.Getenv("OS_PROJECT_NAME")
+	if projectName == "" {
+		return nil
+	}
+	scope.ProjectName = projectName
+
+	projectDomainName := os.Getenv("OS_PROJECT_DOMAIN_NAME")
+	projectDomainID := os.Getenv("OS_PROJECT_DOMAIN_ID")
+
+	if projectDomainName == "" && projectDomainID == "" {
+		return nil
+	}
+
+	if projectDomainName != "" {
+		scope.DomainName = projectDomainName
+	}
+	scope.DomainID = projectDomainID
+	return nil
 }
