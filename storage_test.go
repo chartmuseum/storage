@@ -58,6 +58,8 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		bosEndpoint := os.Getenv("TEST_STORAGE_BAIDU_ENDPOINT")
 		cosBucket := os.Getenv("TEST_STORAGE_TENCENT_BUCKET")
 		cosEndpoint := os.Getenv("TEST_STORAGE_TENCENT_ENDPOINT")
+		nosBucket := os.Getenv("TEST_STORAGE_NETEASE_BUCKET")
+		nosEndpoint := os.Getenv("TEST_STORAGE_NETEASE_ENDPOINT")
 		if s3Bucket != "" && s3Region != "" {
 			suite.StorageBackends["AmazonS3"] = Backend(NewAmazonS3Backend(s3Bucket, prefix, s3Region, "", ""))
 		}
@@ -81,6 +83,9 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		}
 		if cosBucket != "" {
 			suite.StorageBackends["TencentCloudCOS"] = Backend(NewTencentCloudCOSBackend(cosBucket, prefix, cosEndpoint))
+		}
+		if nosBucket != "" {
+			suite.StorageBackends["NeteaseCloudNOS"] = Backend(NewNeteaseNOSBackend(nosBucket, prefix, nosEndpoint))
 		}
 	}
 }
