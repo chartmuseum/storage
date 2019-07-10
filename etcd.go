@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	pathutil "path"
 
 	"github.com/coreos/etcd/clientv3"
 
@@ -71,7 +72,7 @@ func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
 		objs []Object
 	)
 	ctx,cancel := context.WithTimeout(e.ctx,e.opts.dialtimeout)
-	newpath := e.base+prefix
+	newpath := pathutil.Join(e.base, prefix)
 	resps, err:=e.c.Get(ctx,newpath,clientv3.WithPrefix())
 	cancel()
 	if err!=nil {
@@ -79,8 +80,12 @@ func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
 	}
 	for _,kv :=range resps.Kvs {
 		if kv.Value != nil {
+			path := removePrefixFromObjectPath(newpath, string(kv.Key))
+			if objectPathIsInvalid(path) {
+				continue
+			}
 			objs =append(objs, Object{
-				Path:string(kv.Key),
+				Path:path,
 				Content:kv.Value,
 				LastModified: time.Unix(kv.ModRevision,0),
 			})
@@ -92,7 +97,7 @@ func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
 
 func (e *etcdStorage) GetObject(path string) (Object, error){
 	ctx,cancel := context.WithTimeout(e.ctx,e.opts.dialtimeout)
-	newpath := e.base+path
+	newpath := pathutil.Join(e.base, path)
 	resps, err:=e.c.Get(ctx,newpath)
 	cancel()
 	if err!=nil {
@@ -110,7 +115,7 @@ func (e *etcdStorage) GetObject(path string) (Object, error){
 
 func (e *etcdStorage) PutObject(path string, content []byte) error{
 	ctx,cancel := context.WithTimeout(e.ctx,e.opts.dialtimeout)
-	newpath := e.base+path
+	newpath := pathutil.Join(e.base, path)
 	_, err:=e.c.Put(ctx,newpath,string(content))
 	cancel()
 	if err!=nil {
@@ -122,7 +127,7 @@ func (e *etcdStorage) PutObject(path string, content []byte) error{
 
 func (e *etcdStorage) DeleteObject(path string) error{
 	ctx,cancel := context.WithTimeout(e.ctx,e.opts.dialtimeout)
-	newpath := e.base+path
+	newpath := pathutil.Join(e.base, path)
 	_, err:=e.c.Delete(ctx,newpath)
 	cancel()
 	if err!=nil {
