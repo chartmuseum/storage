@@ -69,6 +69,10 @@
   branch = "master"
   name = "github.com/tencentyun/cos-go-sdk-v5"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/NetEase-Object-Storage/nos-golang-sdk"
+
 [prune]
   go-tests = true
   unused-packages = true
