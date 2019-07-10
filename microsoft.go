@@ -19,11 +19,12 @@ package storage
 import (
 	"errors"
 	"io/ioutil"
-	"time"
 	pathutil "path"
+	"time"
+
+	"os"
 
 	microsoft_storage "github.com/Azure/azure-sdk-for-go/storage"
-	"os"
 )
 
 // MicrosoftBlobBackend is a storage backend for Microsoft Azure Blob Storage
@@ -37,11 +38,18 @@ func NewMicrosoftBlobBackend(container string, prefix string) *MicrosoftBlobBack
 
 	// From the Azure portal, get your storage account name and key and set environment variables.
 	accountName, accountKey := os.Getenv("AZURE_STORAGE_ACCOUNT"), os.Getenv("AZURE_STORAGE_ACCESS_KEY")
+	var serviceBaseURL, apiVersion string
+	if serviceBaseURL = os.Getenv("AZURE_BASE_URL"); serviceBaseURL == "" {
+		serviceBaseURL = microsoft_storage.DefaultBaseURL
+	}
+	if apiVersion = os.Getenv("AZURE_API_VERSION"); apiVersion == "" {
+		apiVersion = microsoft_storage.DefaultAPIVersion
+	}
 	if len(accountName) == 0 || len(accountKey) == 0 {
 		panic("Either the AZURE_STORAGE_ACCOUNT or AZURE_STORAGE_ACCESS_KEY environment variable is not set")
 	}
 
-	client, err := microsoft_storage.NewBasicClient(accountName, accountKey)
+	client, err := microsoft_storage.NewClient(accountName, accountKey, serviceBaseURL, apiVersion, true)
 	if err != nil {
 		panic(err)
 	}
