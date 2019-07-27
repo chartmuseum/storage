@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	pathutil "path"
+	"time"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -166,7 +167,7 @@ func (b OpenstackOSBackend) ListObjects(prefix string) ([]Object, error) {
 			object := Object{
 				Path:         path,
 				Content:      []byte{},
-				LastModified: openStackObject.LastModified,
+				LastModified: openStackObject.LastModified.Truncate(time.Second).Add(time.Second),
 			}
 			objects = append(objects, object)
 		}
