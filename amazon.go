@@ -22,6 +22,8 @@ import (
 	pathutil "path"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -41,6 +43,26 @@ type AmazonS3Backend struct {
 // NewAmazonS3Backend creates a new instance of AmazonS3Backend
 func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint string, sse string) *AmazonS3Backend {
 	service := s3.New(session.New(), &aws.Config{
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		DisableSSL:       aws.Bool(strings.HasPrefix(endpoint, "http://")),
+		S3ForcePathStyle: aws.Bool(endpoint != ""),
+	})
+	b := &AmazonS3Backend{
+		Bucket:     bucket,
+		Client:     service,
+		Downloader: s3manager.NewDownloaderWithClient(service),
+		Prefix:     cleanPrefix(prefix),
+		Uploader:   s3manager.NewUploaderWithClient(service),
+		SSE:        sse,
+	}
+	return b
+}
+
+// NewAmazonS3BackendWithCredentials creates a new instance of AmazonS3Backend with credentials
+func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region string, endpoint string, sse string, credentials *credentials.Credentials) *AmazonS3Backend {
+	service := s3.New(session.New(), &aws.Config{
+		Credentials:      credentials,
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(strings.HasPrefix(endpoint, "http://")),
