@@ -9,7 +9,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.2.0 // indirect
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-20171031020902-cc8892cb2b05
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.0+incompatible
-	github.com/aws/aws-sdk-go v1.20.18
+	github.com/aws/aws-sdk-go v1.25.7
 	github.com/baidubce/bce-sdk-go v0.0.0-20190612031215-9245260b0d93
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/coreos/bbolt v1.3.3 // indirect
