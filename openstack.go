@@ -239,5 +239,5 @@ func getAuthScope() *gophercloud.AuthScope {
 		scope.DomainName = projectDomainName
 	}
 	scope.DomainID = projectDomainID
-	return nil
+	return scope
 }
