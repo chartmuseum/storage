@@ -24,9 +24,9 @@ import (
 	"net/url"
 	"os"
 	pathutil "path"
+	"time"
 
 	"github.com/tencentyun/cos-go-sdk-v5"
-	"github.com/tencentyun/cos-go-sdk-v5/debug"
 )
 
 // TencentCloudCOSBackend is a storage backend for Tencent Cloud COS
@@ -70,13 +70,6 @@ func NewTencentCloudCOSBackend(bucket string, prefix string, endpoint string) *T
 		Transport: &cos.AuthorizationTransport{
 			SecretID:  secretID,
 			SecretKey: secretKey,
-			Transport: &debug.DebugRequestTransport{
-				RequestHeader: true,
-				// Notice when put a large file and set need the request body, might happend out of memory error.
-				RequestBody:    false,
-				ResponseHeader: true,
-				ResponseBody:   true,
-			},
 		},
 	})
 
@@ -114,7 +107,7 @@ func (t TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
 			if objectPathIsInvalid(path) {
 				continue
 			}
-			lastModified, _ := http.ParseTime(obj.LastModified)
+			lastModified, _ := time.Parse(time.RFC3339, obj.LastModified)
 			object := Object{
 				Path:         path,
 				Content:      []byte{},
