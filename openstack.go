@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	pathutil "path"
+	"time"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -163,10 +164,20 @@ func (b OpenstackOSBackend) ListObjects(prefix string) ([]Object, error) {
 			if objectPathIsInvalid(path) {
 				continue
 			}
+
+			// This is a patch so that LastModified match between the List and GetObject function
+			// Openstack seems to send a rounded up time when getting the LastModified date from an object show versus an object list
+			var lastModified time.Time
+			if openStackObject.LastModified.Nanosecond()/int(time.Microsecond) == 0 {
+				lastModified = openStackObject.LastModified
+			} else {
+				lastModified = openStackObject.LastModified.Truncate(time.Second).Add(time.Second)
+			}
+
 			object := Object{
 				Path:         path,
 				Content:      []byte{},
-				LastModified: openStackObject.LastModified,
+				LastModified: lastModified,
 			}
 			objects = append(objects, object)
 		}
