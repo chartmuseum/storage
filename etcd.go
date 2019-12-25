@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	pathutil "path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
-
-	"github.com/coreos/etcd/pkg/transport"
-	"strconv"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/pkg/transport"
 )
 
 const DefaultPrefix = "/chart_backend_bucket"
