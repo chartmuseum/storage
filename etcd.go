@@ -199,9 +199,9 @@ func parseConf(endpoints string, cafile, certfile, keyfile string, dialtime time
 	}
 	es = strings.Split(endpoints, ",")
 	tlsInfo := transport.TLSInfo{
-		CertFile: certfile,
-		KeyFile:  keyfile,
-		CAFile:   cafile,
+		CertFile:      certfile,
+		KeyFile:       keyfile,
+		TrustedCAFile: cafile,
 	}
 	tlsConfig, err := tlsInfo.ClientConfig()
 	if err != nil {
