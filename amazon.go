@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	pathutil "path"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 
@@ -98,9 +99,14 @@ func (b AmazonS3Backend) ListObjects(prefix string) ([]Object, error) {
 				continue
 			}
 			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: *obj.LastModified,
+				Path:    path,
+				Content: []byte{},
+				// This is a patch so that LastModified match between the List
+				// and GetObject function. Some S3 implementations like Dell ECS,
+				// Ceph or DigitalOcean Spaces seems to truncate the microseconds
+				// when getting the LastModified date from an object get
+				// versus an object list
+				LastModified: obj.LastModified.Truncate(time.Second),
 			}
 			objects = append(objects, object)
 		}
