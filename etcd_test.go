@@ -20,7 +20,8 @@ type CsEtcdSuite struct {
 }
 
 func (c *CsEtcdSuite) SetupSuite() {
-
+	// TODO: renable, see https://github.com/chartmuseum/storage/issues/6
+	c.T().Skip()
 	c.etcd=NewEtcdCSBackend(endpoints,cafile,certfile,keyfile,"")
 	fmt.Println("init success")
 }
