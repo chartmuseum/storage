@@ -31,15 +31,15 @@ type AmazonTestSuite struct {
 }
 
 func (suite *AmazonTestSuite) SetupSuite() {
-	backend := NewAmazonS3Backend("fake-bucket-cant-exist-fbce123", "", "us-east-1", "", "")
+	backend := NewAmazonS3Backend("fake-bucket-cant-exist-fbce123", "", "us-east-1", "", "", false)
 	suite.BrokenAmazonS3Backend = backend
 
 	s3Bucket := os.Getenv("TEST_STORAGE_AMAZON_BUCKET")
 	s3Region := os.Getenv("TEST_STORAGE_AMAZON_REGION")
-	backend = NewAmazonS3Backend(s3Bucket, "", s3Region, "", "")
+	backend = NewAmazonS3Backend(s3Bucket, "", s3Region, "", "", false)
 	suite.NoPrefixAmazonS3Backend = backend
 
-	backend = NewAmazonS3Backend(s3Bucket, "ssetest", s3Region, "", "AES256")
+	backend = NewAmazonS3Backend(s3Bucket, "ssetest", s3Region, "", "AES256", false)
 	suite.SSEAmazonS3Backend = backend
 
 	data := []byte("some object")
