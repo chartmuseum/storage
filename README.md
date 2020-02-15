@@ -8,13 +8,19 @@ Go library providing a common interface for working across multiple storage back
 
 Supported storage backends:
 
-- Local filesystem
-- [Amazon S3](https://aws.amazon.com/s3/)
-- [Google Cloud Storage](https://cloud.google.com/storage/)
-- [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/)
-- [Alibaba Cloud OSS Storage](https://www.alibabacloud.com/product/oss)
-- [Openstack Object Storage](https://developer.openstack.org/api-ref/object-store/)
-- [Oracle Cloud Infrastructure Object Storage](https://cloud.oracle.com/storage)
+- [Alibaba Cloud OSS Storage](https://www.alibabacloud.com/product/oss) ([alibaba.go](./alibaba.go))
+- [Amazon S3](https://aws.amazon.com/s3/) ([amazon.go](./amazon.go))
+- [Baidu Cloud BOS Storage](https://cloud.baidu.com/product/bos.html) ([baidu.go](./baidu.go))
+- [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces/) ([amazon.go](./amazon.go), using custom endpoint and us-east-1)
+- [etcd](https://etcd.io/) ([etcd.go](./etcd.go))
+- [Google Cloud Storage](https://cloud.google.com/storage/) ([google.go](./google.go))
+- Local filesystem ([local.go](./local.go))
+- [Microsoft Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/) ([microsoft.go](./microsoft.go))
+- [Minio](https://min.io/) ([amazon.go](./amazon.go), using custom endpoint and us-east-1)
+- [Netease Cloud NOS Storage](https://www.163yun.com/product/nos) ([netease.go](./netease.go))
+- [Openstack Object Storage](https://developer.openstack.org/api-ref/object-store/) ([openstack.go](./openstack.go))
+- [Oracle Cloud Infrastructure Object Storage](https://cloud.oracle.com/storage) ([oracle.go](./oracle.go))
+- [Tencent Cloud Object Storage](https://intl.cloud.tencent.com/product/cos) ([tencent.go](./tencent.go))
 
 *This code was originally part of the [Helm](https://github.com/helm/helm) project, [ChartMuseum](https://github.com/helm/chartmuseum),
 but has since been released as a standalone package for others to use in their own projects.*
