@@ -87,11 +87,6 @@ func (b MicrosoftBlobBackend) ListObjects(prefix string) ([]Object, error) {
 			continue
 		}
 
-		err = blob.GetProperties(nil)
-		if err != nil {
-			return objects, err
-		}
-
 		object := Object{
 			Path:         path,
 			Content:      []byte{},
