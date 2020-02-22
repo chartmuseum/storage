@@ -76,25 +76,35 @@ func (b MicrosoftBlobBackend) ListObjects(prefix string) ([]Object, error) {
 	var params microsoft_storage.ListBlobsParameters
 	prefix = pathutil.Join(b.Prefix, prefix)
 	params.Prefix = prefix
-	response, err := b.Container.ListBlobs(params)
-	if err != nil {
-		return objects, err
-	}
 
-	for _, blob := range response.Blobs {
-		path := removePrefixFromObjectPath(prefix, blob.Name)
-		if objectPathIsInvalid(path) {
-			continue
+	for {
+		response, err := b.Container.ListBlobs(params)
+		if err != nil {
+			return objects, err
 		}
 
-		object := Object{
-			Path:         path,
-			Content:      []byte{},
-			LastModified: time.Time(blob.Properties.LastModified),
+		for _, blob := range response.Blobs {
+			path := removePrefixFromObjectPath(prefix, blob.Name)
+			if objectPathIsInvalid(path) {
+				continue
+			}
+
+			object := Object{
+				Path:         path,
+				Content:      []byte{},
+				LastModified: time.Time(blob.Properties.LastModified),
+			}
+
+			objects = append(objects, object)
 		}
 
-		objects = append(objects, object)
+		if response.NextMarker == "" {
+			break
+		}
+
+		params.Marker = response.NextMarker
 	}
+
 	return objects, nil
 }
 
