@@ -33,7 +33,7 @@ func (suite *MicrosoftTestSuite) SetupSuite() {
 	backend := NewMicrosoftBlobBackend("fake-container-cant-exist-fbce123", "")
 	suite.BrokenAzureBlobBackend = backend
 
-	containerName := os.Getenv("TEST_STORAGE_MICROSOFT_CONTAINER")
+	containerName := os.Getenv("TEST_STORAGE_AZURE_CONTAINER")
 	backend = NewMicrosoftBlobBackend(containerName, "")
 	suite.NoPrefixAzureBlobBackend = backend
 
