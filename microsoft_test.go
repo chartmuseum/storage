@@ -17,6 +17,7 @@ limitations under the License.
 package storage
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -54,6 +55,28 @@ func (suite *MicrosoftTestSuite) TestListObjects() {
 
 	_, err = suite.NoPrefixAzureBlobBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
+}
+
+func (suite *MicrosoftTestSuite) TestListObjectsWithPaging() {
+	// create 5001 objects to trigger the need of paging, since
+	// the default page size for Azure Blobs are 5000.
+	data := []byte("some object")
+	for i := 0; i < 5001; i++ {
+		path := fmt.Sprintf("deleteme-%d.txt", i)
+		suite.NoPrefixAzureBlobBackend.PutObject(path, data)
+	}
+
+	// check if 5002 (5001 plus deleteme.txt from SetupSuite()) objects
+	// are returned. Without paging, we would get only 5000.
+	res, err := suite.NoPrefixAzureBlobBackend.ListObjects("")
+	suite.Nil(err, "can list objects with good bucket, no prefix")
+	suite.Equal(5001, len(res))
+
+	// clean up
+	for i := 0; i < 5001; i++ {
+		path := fmt.Sprintf("deleteme-%d.txt", i)
+		suite.NoPrefixAzureBlobBackend.DeleteObject(path)
+	}
 }
 
 func (suite *MicrosoftTestSuite) TestGetObject() {
