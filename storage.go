@@ -56,13 +56,12 @@ func (object Object) HasExtension(extension string) bool {
 // GetObjectSliceDiff takes two objects slices and returns an ObjectSliceDiff
 func GetObjectSliceDiff(os1 []Object, os2 []Object, timestampTolerance time.Duration) ObjectSliceDiff {
 	var diff ObjectSliceDiff
-
 	for _, o1 := range os1 {
 		found := false
 		for _, o2 := range os2 {
 			if o1.Path == o2.Path {
 				found = true
-				if o2.LastModified.Sub(o1.LastModified) >= timestampTolerance {
+				if o2.LastModified.Sub(o1.LastModified) > timestampTolerance {
 					diff.Updated = append(diff.Updated, o2)
 				}
 				break
