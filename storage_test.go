@@ -193,21 +193,35 @@ func (suite *StorageTestSuite) TestGetObjectSliceDiff() {
 		},
 	}
 	os2 := []Object{}
-	diff := GetObjectSliceDiff(os1, os2)
+	diff := GetObjectSliceDiff(os1, os2, time.Duration(0))
 	suite.True(diff.Change, "change detected")
 	suite.Equal(diff.Removed, os1, "removed slice populated")
 	suite.Empty(diff.Added, "added slice empty")
 	suite.Empty(diff.Updated, "updated slice empty")
 
 	os2 = append(os2, os1[0])
-	diff = GetObjectSliceDiff(os1, os2)
+	diff = GetObjectSliceDiff(os1, os2, time.Duration(0))
 	suite.False(diff.Change, "no change detected")
 	suite.Empty(diff.Removed, "removed slice empty")
 	suite.Empty(diff.Added, "added slice empty")
 	suite.Empty(diff.Updated, "updated slice empty")
 
 	os2[0].LastModified = now.Add(1)
-	diff = GetObjectSliceDiff(os1, os2)
+	diff = GetObjectSliceDiff(os1, os2, time.Duration(0))
+	suite.True(diff.Change, "change detected")
+	suite.Empty(diff.Removed, "removed slice empty")
+	suite.Empty(diff.Added, "added slice empty")
+	suite.Equal(diff.Updated, os2, "updated slice populated")
+
+	os2[0].LastModified = now.Add(time.Second)
+	diff = GetObjectSliceDiff(os1, os2, time.Second)
+	suite.False(diff.Change, "no change detected")
+	suite.Empty(diff.Removed, "removed slice empty")
+	suite.Empty(diff.Added, "added slice empty")
+	suite.Empty(diff.Updated, "updated slice empty")
+
+	os2[0].LastModified = now.Add(time.Second + time.Nanosecond)
+	diff = GetObjectSliceDiff(os1, os2, time.Second)
 	suite.True(diff.Change, "change detected")
 	suite.Empty(diff.Removed, "removed slice empty")
 	suite.Empty(diff.Added, "added slice empty")
@@ -219,11 +233,12 @@ func (suite *StorageTestSuite) TestGetObjectSliceDiff() {
 		Content:      []byte{},
 		LastModified: now,
 	})
-	diff = GetObjectSliceDiff(os1, os2)
+	diff = GetObjectSliceDiff(os1, os2, time.Duration(0))
 	suite.True(diff.Change, "change detected")
 	suite.Empty(diff.Removed, "removed slice empty")
 	suite.Equal(diff.Added, []Object{os2[1]}, "added slice empty")
 	suite.Empty(diff.Updated, "updated slice empty")
+
 }
 
 func TestStorageTestSuite(t *testing.T) {
