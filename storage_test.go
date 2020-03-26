@@ -61,7 +61,7 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		nosBucket := os.Getenv("TEST_STORAGE_NETEASE_BUCKET")
 		nosEndpoint := os.Getenv("TEST_STORAGE_NETEASE_ENDPOINT")
 		if s3Bucket != "" && s3Region != "" {
-			suite.StorageBackends["AmazonS3"] = Backend(NewAmazonS3Backend(s3Bucket, prefix, s3Region, "", "", false))
+			suite.StorageBackends["AmazonS3"] = Backend(NewAmazonS3Backend(s3Bucket, prefix, s3Region, "", ""))
 		}
 		if gcsBucket != "" {
 			suite.StorageBackends["GoogleCS"] = Backend(NewGoogleCSBackend(gcsBucket, prefix))

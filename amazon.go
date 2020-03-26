@@ -21,11 +21,9 @@ import (
 	"io/ioutil"
 	pathutil "path"
 	"strings"
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws/credentials"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -33,17 +31,16 @@ import (
 
 // AmazonS3Backend is a storage backend for Amazon S3
 type AmazonS3Backend struct {
-	Bucket        string
-	Client        *s3.S3
-	Downloader    *s3manager.Downloader
-	Prefix        string
-	Uploader      *s3manager.Uploader
-	SSE           string
-	NearestSecond bool
+	Bucket     string
+	Client     *s3.S3
+	Downloader *s3manager.Downloader
+	Prefix     string
+	Uploader   *s3manager.Uploader
+	SSE        string
 }
 
 // NewAmazonS3Backend creates a new instance of AmazonS3Backend
-func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint string, sse string, nearestSecond bool) *AmazonS3Backend {
+func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint string, sse string) *AmazonS3Backend {
 	service := s3.New(session.New(), &aws.Config{
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
@@ -51,19 +48,18 @@ func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint st
 		S3ForcePathStyle: aws.Bool(endpoint != ""),
 	})
 	b := &AmazonS3Backend{
-		Bucket:        bucket,
-		Client:        service,
-		Downloader:    s3manager.NewDownloaderWithClient(service),
-		Prefix:        cleanPrefix(prefix),
-		Uploader:      s3manager.NewUploaderWithClient(service),
-		SSE:           sse,
-		NearestSecond: nearestSecond,
+		Bucket:     bucket,
+		Client:     service,
+		Downloader: s3manager.NewDownloaderWithClient(service),
+		Prefix:     cleanPrefix(prefix),
+		Uploader:   s3manager.NewUploaderWithClient(service),
+		SSE:        sse,
 	}
 	return b
 }
 
 // NewAmazonS3BackendWithCredentials creates a new instance of AmazonS3Backend with credentials
-func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region string, endpoint string, sse string, nearestSecond bool, credentials *credentials.Credentials) *AmazonS3Backend {
+func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region string, endpoint string, sse string, credentials *credentials.Credentials) *AmazonS3Backend {
 	service := s3.New(session.New(), &aws.Config{
 		Credentials:      credentials,
 		Region:           aws.String(region),
@@ -72,13 +68,12 @@ func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region stri
 		S3ForcePathStyle: aws.Bool(endpoint != ""),
 	})
 	b := &AmazonS3Backend{
-		Bucket:        bucket,
-		Client:        service,
-		Downloader:    s3manager.NewDownloaderWithClient(service),
-		Prefix:        cleanPrefix(prefix),
-		Uploader:      s3manager.NewUploaderWithClient(service),
-		SSE:           sse,
-		NearestSecond: nearestSecond,
+		Bucket:     bucket,
+		Client:     service,
+		Downloader: s3manager.NewDownloaderWithClient(service),
+		Prefix:     cleanPrefix(prefix),
+		Uploader:   s3manager.NewUploaderWithClient(service),
+		SSE:        sse,
 	}
 	return b
 }
@@ -105,14 +100,6 @@ func (b AmazonS3Backend) ListObjects(prefix string) ([]Object, error) {
 				Path:         path,
 				Content:      []byte{},
 				LastModified: *obj.LastModified,
-			}
-			if b.NearestSecond {
-				// This is a patch so that LastModified match between the List
-				// and GetObject function. Some S3 implementations like Dell ECS,
-				// Ceph or DigitalOcean Spaces seems to truncate the microseconds
-				// when getting the LastModified date from an object get
-				// versus an object list
-				object.LastModified = obj.LastModified.Truncate(time.Second)
 			}
 			objects = append(objects, object)
 		}
