@@ -54,31 +54,34 @@ func (object Object) HasExtension(extension string) bool {
 }
 
 // GetObjectSliceDiff takes two objects slices and returns an ObjectSliceDiff
-func GetObjectSliceDiff(os1 []Object, os2 []Object, timestampTolerance time.Duration) ObjectSliceDiff {
+func GetObjectSliceDiff(prev []Object, curr []Object, timestampTolerance time.Duration) ObjectSliceDiff {
 	var diff ObjectSliceDiff
-	om1 := make(map[string]Object)
-	om2 := make(map[string]Object)
-	for _, o1 := range os1 {
-		om1[o1.Path] = o1
+	pos := make(map[string]Object)
+	cos := make(map[string]Object)
+	for _, o := range prev {
+		pos[o.Path] = o
 	}
-	for _, o2 := range os2 {
-		om2[o2.Path] = o2
+	for _, o := range curr {
+		cos[o.Path] = o
 	}
-	for _, o1 := range os1 {
-		if o2, found := om2[o1.Path]; found {
-			if o2.LastModified.Sub(o1.LastModified) > timestampTolerance {
-				diff.Updated = append(diff.Updated, o2)
+	// for every object in the previous slice, if it exists in the current slice, check if it is *considered as* updated;
+	// otherwise, mark it as removed
+	for _, p := range prev {
+		if c, found := cos[p.Path]; found {
+			if c.LastModified.Sub(p.LastModified) > timestampTolerance {
+				diff.Updated = append(diff.Updated, c)
 			}
 		} else {
-			diff.Removed = append(diff.Removed, o1)
+			diff.Removed = append(diff.Removed, p)
 		}
 	}
-
-	for _, o2 := range os2 {
-		if _, found := om1[o2.Path]; !found {
-			diff.Added = append(diff.Added, o2)
+	// for every object in the current slice, if it does not exist in the previous slice, mark it as added
+	for _, c := range curr {
+		if _, found := pos[c.Path]; !found {
+			diff.Added = append(diff.Added, c)
 		}
 	}
+	// if any object is marked as removed or added or updated, set change to true
 	diff.Change = len(diff.Removed)+len(diff.Added)+len(diff.Updated) > 0
 	return diff
 }
