@@ -192,7 +192,7 @@ func (suite *StorageTestSuite) TestGetObjectSliceDiff() {
 			LastModified: now,
 		},
 	}
-	os2 := []Object{}
+	var os2 []Object
 	diff := GetObjectSliceDiff(os1, os2, time.Duration(0))
 	suite.True(diff.Change, "change detected")
 	suite.Equal(diff.Removed, os1, "removed slice populated")
