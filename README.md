@@ -103,9 +103,9 @@ func NewUploader(cloud string, bucket string) *Uploader {
 	var backend storage.Backend
 	switch cloud {
 	case "azure":
-		backend = storage.Backend(storage.NewMicrosoftBlobBackend(bucket, ""))
+		backend = storage.NewMicrosoftBlobBackend(bucket, "")
 	case "google":
-		backend = storage.Backend(storage.NewGoogleCSBackend(bucket, ""))
+		backend = storage.NewGoogleCSBackend(bucket, "")
 	default:
 		panic("cloud provider " + cloud + " not supported")
 	}
