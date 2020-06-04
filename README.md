@@ -22,7 +22,7 @@ Supported storage backends:
 - [Oracle Cloud Infrastructure Object Storage](https://cloud.oracle.com/storage) ([oracle.go](./oracle.go))
 - [Tencent Cloud Object Storage](https://intl.cloud.tencent.com/product/cos) ([tencent.go](./tencent.go))
 
-*This code was originally part of the [Helm](https://github.com/helm/helm) project, [ChartMuseum](https://github.com/helm/chartmuseum),
+*This code was originally part of the [Helm](https://github.com/helm/helm) project: [ChartMuseum](https://github.com/helm/chartmuseum),
 but has since been released as a standalone package for others to use in their own projects.*
 
 ## Primary Components
@@ -70,9 +70,8 @@ type ObjectSliceDiff struct {
 `GetObjectSliceDiff` is a function that takes two `Object` slices, compares them, and returns an `ObjectSliceDiff`:
 
 ```go
-func GetObjectSliceDiff(os1 []Object, os2 []Object) ObjectSliceDiff
+func GetObjectSliceDiff(prev []Object, curr []Object, timestampTolerance time.Duration) ObjectSliceDiff
 ```
-
 
 ## Usage
 
@@ -87,10 +86,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/chartmuseum/storage"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/chartmuseum/storage"
 )
 
 type (
@@ -103,9 +103,9 @@ func NewUploader(cloud string, bucket string) *Uploader {
 	var backend storage.Backend
 	switch cloud {
 	case "azure":
-		backend = storage.Backend(storage.NewMicrosoftBlobBackend(bucket, ""))
+		backend = storage.NewMicrosoftBlobBackend(bucket, "")
 	case "google":
-		backend = storage.Backend(storage.NewGoogleCSBackend(bucket, ""))
+		backend = storage.NewGoogleCSBackend(bucket, "")
 	default:
 		panic("cloud provider " + cloud + " not supported")
 	}
@@ -132,18 +132,17 @@ func main() {
 	uploader := NewUploader(args[0], args[1])
 	uploader.Upload(args[2])
 }
-
 ```
 
 Example of using to upload the file `index.html` to an Azure bucket:
 
-```
+```bash
 go run example.go azure mycontainer index.html
 ```
 
 Example of using to upload the file `index.html` to a Google Cloud bucket:
 
-```
+```bash
 go run example.go google mybucket index.html
 ```
 
