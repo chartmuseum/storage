@@ -20,6 +20,8 @@ import (
 	"os"
 	"testing"
 
+	osContainers "github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers"
+
 	"github.com/stretchr/testify/suite"
 )
 
@@ -55,17 +57,18 @@ func (suite *OpenstackTestSuite) SetupSuite() {
 
 	data := []byte("some object")
 	path := "deleteme.txt"
-
 	for _, backend := range suite.NoPrefixOpenstackOSBackend {
-		err := backend.PutObject(path, data)
-		suite.Nil(err, "no error putting deleteme.txt using openstack backend")
+		_, err := osContainers.Create(backend.Client, osContainer, nil).Extract()
+		suite.Nil(err, "error creating container %s: %v", osContainer, err)
+		err = backend.PutObject(path, data)
+		suite.Nil(err, "error putting deleteme.txt using openstack backend")
 	}
 }
 
 func (suite *OpenstackTestSuite) TearDownSuite() {
 	for _, backend := range suite.NoPrefixOpenstackOSBackend {
 		err := backend.DeleteObject("deleteme.txt")
-		suite.Nil(err, "no error deleting deleteme.txt using Openstack backend")
+		suite.Nil(err, "error deleting deleteme.txt using Openstack backend")
 	}
 }
 
