@@ -31,6 +31,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	osObjects "github.com/gophercloud/gophercloud/openstack/objectstorage/v1/objects"
+	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/swauth"
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
@@ -136,6 +137,63 @@ func NewOpenstackOSBackend(container string, prefix string, region string, caCer
 		Container: container,
 		Prefix:    prefix,
 		Region:    region,
+		Client:    client,
+	}
+
+	return b
+}
+
+// NewOpenstackOSBackendV1Auth creates a new instance of OpenstackOSBackend using Swift V1 Auth
+func NewOpenstackOSBackendV1Auth(container string, prefix string, caCert string) *OpenstackOSBackend {
+	for _, e := range []string{"ST_USER", "ST_KEY", "ST_AUTH"} {
+		if os.Getenv(e) == "" {
+			panic(fmt.Sprintf("Openstack (object storage): missing environment variable %s", e))
+		}
+	}
+
+	authOpts := swauth.AuthOpts{
+		User: os.Getenv("ST_USER"),
+		Key:  os.Getenv("ST_KEY"),
+	}
+	identityEndpoint := os.Getenv("ST_AUTH")
+
+	// Create a custom HTTP client to handle custom CACERT if needed
+	httpTransport := http.DefaultTransport
+	if caCert != "" {
+		caCert, err := ioutil.ReadFile(caCert)
+		if err != nil {
+			panic(fmt.Sprintf("Openstack (ca certificates): %s", err))
+		}
+
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			panic(fmt.Sprintf("Openstack (ca certificates): unable to read certificate bundle"))
+		}
+
+		httpTransport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: caCertPool,
+			},
+		}
+	}
+
+	provider, err := openstack.NewClient(identityEndpoint)
+	if err != nil {
+		panic(fmt.Sprintf("Openstack (client): %s", err))
+	}
+
+	provider.HTTPClient = http.Client{
+		Transport: httpTransport,
+	}
+
+	client, err := swauth.NewObjectStorageV1(provider, authOpts)
+	if err != nil {
+		panic(fmt.Sprintf("Openstack (object storage): %s", err))
+	}
+
+	b := &OpenstackOSBackend{
+		Container: container,
+		Prefix:    prefix,
 		Client:    client,
 	}
 
