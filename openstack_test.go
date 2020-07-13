@@ -20,59 +20,87 @@ import (
 	"os"
 	"testing"
 
+	osContainers "github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers"
+
 	"github.com/stretchr/testify/suite"
 )
 
 type OpenstackTestSuite struct {
 	suite.Suite
-	BrokenOpenstackOSBackend   *OpenstackOSBackend
-	NoPrefixOpenstackOSBackend *OpenstackOSBackend
+	BrokenOpenstackOSBackend   []*OpenstackOSBackend
+	NoPrefixOpenstackOSBackend []*OpenstackOSBackend
 }
 
 func (suite *OpenstackTestSuite) SetupSuite() {
 	osRegion := os.Getenv("TEST_STORAGE_OPENSTACK_REGION")
-
-	backend := NewOpenstackOSBackend("fake-container-cant-exist-fbce123", "", osRegion, "")
-	suite.BrokenOpenstackOSBackend = backend
-
 	osContainer := os.Getenv("TEST_STORAGE_OPENSTACK_CONTAINER")
-	backend = NewOpenstackOSBackend(osContainer, "", osRegion, "")
-	suite.NoPrefixOpenstackOSBackend = backend
+
+	if os.Getenv("OS_AUTH_URL") != "" && osRegion != "" {
+		backend := NewOpenstackOSBackend("fake-container-cant-exist-fbce123", "", osRegion, "")
+		suite.BrokenOpenstackOSBackend = append(suite.BrokenOpenstackOSBackend, backend)
+
+		backend = NewOpenstackOSBackend(osContainer, "", osRegion, "")
+		suite.NoPrefixOpenstackOSBackend = append(suite.NoPrefixOpenstackOSBackend, backend)
+	} else {
+		suite.T().Log("Skipping OpenStack Swift tests due to missing ENV vars.")
+	}
+
+	if os.Getenv("ST_AUTH") != "" {
+		backend := NewOpenstackOSBackendV1Auth("fake-container-cant-exist-fbce123", "", "")
+		suite.BrokenOpenstackOSBackend = append(suite.BrokenOpenstackOSBackend, backend)
+
+		backend = NewOpenstackOSBackendV1Auth(osContainer, "", "")
+		suite.NoPrefixOpenstackOSBackend = append(suite.NoPrefixOpenstackOSBackend, backend)
+	} else {
+		suite.T().Log("Skipping Swift TempAuth (V1 Auth) tests due to missing ENV vars.")
+	}
 
 	data := []byte("some object")
 	path := "deleteme.txt"
-
-	err := suite.NoPrefixOpenstackOSBackend.PutObject(path, data)
-	suite.Nil(err, "no error putting deleteme.txt using openstack backend")
+	for _, backend := range suite.NoPrefixOpenstackOSBackend {
+		_, err := osContainers.Create(backend.Client, osContainer, nil).Extract()
+		suite.Nil(err, "error creating container %s: %v", osContainer, err)
+		err = backend.PutObject(path, data)
+		suite.Nil(err, "error putting deleteme.txt using openstack backend")
+	}
 }
 
 func (suite *OpenstackTestSuite) TearDownSuite() {
-	err := suite.NoPrefixOpenstackOSBackend.DeleteObject("deleteme.txt")
-	suite.Nil(err, "no error deleting deleteme.txt using Openstack backend")
+	for _, backend := range suite.NoPrefixOpenstackOSBackend {
+		err := backend.DeleteObject("deleteme.txt")
+		suite.Nil(err, "error deleting deleteme.txt using Openstack backend")
+	}
 }
 
 func (suite *OpenstackTestSuite) TestListObjects() {
-	_, err := suite.BrokenOpenstackOSBackend.ListObjects("")
-	suite.NotNil(err, "cannot list objects with bad container")
+	for _, backend := range suite.BrokenOpenstackOSBackend {
+		_, err := backend.ListObjects("")
+		suite.NotNil(err, "cannot list objects with bad container")
+	}
 
-	_, err = suite.NoPrefixOpenstackOSBackend.ListObjects("")
-	suite.Nil(err, "can list objects with good container, no prefix")
+	for _, backend := range suite.NoPrefixOpenstackOSBackend {
+		_, err := backend.ListObjects("")
+		suite.Nil(err, "can list objects with good container, no prefix")
+	}
 }
 
 func (suite *OpenstackTestSuite) TestGetObject() {
-	_, err := suite.BrokenOpenstackOSBackend.GetObject("this-file-cannot-possibly-exist.tgz")
-	suite.NotNil(err, "cannot get objects with bad container")
+	for _, backend := range suite.BrokenOpenstackOSBackend {
+		_, err := backend.GetObject("this-file-cannot-possibly-exist.tgz")
+		suite.NotNil(err, "cannot get objects with bad container")
+	}
 }
 
 func (suite *OpenstackTestSuite) TestPutObject() {
-	err := suite.BrokenOpenstackOSBackend.PutObject("this-file-will-not-upload.txt", []byte{})
-	suite.NotNil(err, "cannot put objects with bad container")
+	for _, backend := range suite.BrokenOpenstackOSBackend {
+		err := backend.PutObject("this-file-will-not-upload.txt", []byte{})
+		suite.NotNil(err, "cannot put objects with bad container")
+	}
 }
 
-func TestOpenstackStorageTestSuite(t *testing.T) {
+func TestOpenstackOSStorageTestSuite(t *testing.T) {
 	if os.Getenv("TEST_CLOUD_STORAGE") == "1" &&
-		os.Getenv("TEST_STORAGE_OPENSTACK_CONTAINER") != "" &&
-		os.Getenv("TEST_STORAGE_OPENSTACK_REGION") != "" {
+		os.Getenv("TEST_STORAGE_OPENSTACK_CONTAINER") != "" {
 		suite.Run(t, new(OpenstackTestSuite))
 	}
 }
