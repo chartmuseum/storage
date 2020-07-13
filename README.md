@@ -1,6 +1,6 @@
 # chartmuseum/storage
 
-[![Codefresh build status](https://g.codefresh.io/api/badges/pipeline/chartmuseum/chartmuseum%2Fstorage%2Fmaster?type=cf-1)](https://g.codefresh.io/public/accounts/chartmuseum/pipelines/chartmuseum/storage/master)
+[![GitHub Actions status](https://github.com/chartmuseum/storage/workflows/build/badge.svg)](https://github.com/chartmuseum/storage/actions?query=workflow%3Abuild)
 [![Go Report Card](https://goreportcard.com/badge/github.com/chartmuseum/storage)](https://goreportcard.com/report/github.com/chartmuseum/storage)
 [![GoDoc](https://godoc.org/github.com/chartmuseum/storage?status.svg)](https://godoc.org/github.com/chartmuseum/storage)
 

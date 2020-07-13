@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout source code
+        uses: actions/checkout@master
+      - name: setup go environment
+        uses: actions/setup-go@v1
+        with:
+          go-version: '1.14.4'
+      - name: run tests
+        run: make test
+      - name: upload coverage report
+        uses: actions/upload-artifact@master
+        with:
+          name: chartmuseum-storage-coverage-report-${{ github.sha }}
+          path: coverage.html
+        if: always()
