@@ -108,3 +108,11 @@ func removePrefixFromObjectPath(prefix string, path string) string {
 func objectPathIsInvalid(path string) bool {
 	return strings.Contains(path, "/") || path == ""
 }
+
+func objectPathIsFile(path string) bool {
+	return !strings.Contains(path, "/") && path != ""
+}
+
+func objectPathIsFolder(path string) bool {
+	return strings.Contains(path, "/") && path != ""
+}
