@@ -49,34 +49,51 @@ func NewGoogleCSBackend(bucket string, prefix string) *GoogleCSBackend {
 	return b
 }
 
-// ListObjects lists all objects in Google Cloud Storage bucket, at prefix
+type Item struct {
+	object *Object
+	err error
+}
+
 func (b GoogleCSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
-	listQuery := &storage.Query{
-		Prefix: prefix,
-	}
-	it := b.Client.Objects(b.Context, listQuery)
-	for {
-		attrs, err := it.Next()
-		if err == iterator.Done {
-			break
+	objects := []Object{}
+	for item := range b.ObjectIter(prefix) {
+		if item.err != nil {
+			return objects, item.err
 		}
-		if err != nil {
-			return objects, err
+		if objectPathIsFile(item.object.Path) {
+			objects = append(objects, *item.object)
 		}
-		path := removePrefixFromObjectPath(prefix, attrs.Name)
-		if objectPathIsInvalid(path) {
-			continue
-		}
-		object := Object{
-			Path:         path,
-			Content:      []byte{},
-			LastModified: attrs.Updated,
-		}
-		objects = append(objects, object)
 	}
 	return objects, nil
+}
+
+func (b GoogleCSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		listQuery := &storage.Query{
+			Prefix: prefix,
+		}
+		it := b.Client.Objects(b.Context, listQuery)
+		for {
+			attrs, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				ch <- Item{nil, err}
+			}
+			path := removePrefixFromObjectPath(prefix, attrs.Name)
+			ch <- Item{
+				&Object{
+					Path:         path,
+					Content:      []byte{},
+					LastModified: attrs.Updated,
+				}, nil }
+		}
+		close(ch)
+	} ();
+	return ch
 }
 
 // GetObject retrieves an object from Google Cloud Storage bucket, at prefix
