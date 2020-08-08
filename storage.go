@@ -31,6 +31,12 @@ type (
 		LastModified time.Time
 	}
 
+	// Object is a generic representation of a storage object folder
+	Folder struct {
+		Path         string
+		LastModified time.Time
+	}
+
 	// ObjectSliceDiff provides information on what has changed since last calling ListObjects
 	ObjectSliceDiff struct {
 		Change  bool
@@ -108,4 +114,16 @@ func objectPathIsFile(path string) bool {
 
 func objectPathIsFolder(path string) bool {
 	return strings.Contains(path, "/") && path != ""
+}
+
+func folderNameFromObjectPath(path string) string {
+	return path[0:strings.IndexRune(path, '/')]
+}
+
+func folderMapToSlice(folderMap map[string]*Folder) []Folder {
+	folders := make([]Folder, 0, len(folderMap))
+	for _, v := range folderMap {
+		folders = append(folders, *v)
+	}
+	return folders
 }
