@@ -49,40 +49,14 @@ func NewGoogleCSBackend(bucket string, prefix string) *GoogleCSBackend {
 	return b
 }
 
-// ListFolders lists all folders in Google Cloud Storage bucket, at prefix
-func (b GoogleCSBackend) ListFolders(prefix string) ([]Folder, error) {
-	folders := make(map[string]*Folder)
-	for item := range b.ObjectIter(prefix) {
-		if item.err != nil {
-			return folderMapToSlice(folders), item.err
-		}
-		if objectPathIsFolder(item.obj.Path) {
-			name := folderNameFromObjectPath(item.obj.Path)
-			if folders[name] == nil || item.obj.LastModified.After(folders[name].LastModified) {
-				folders[name] = &Folder{Path: name, LastModified: item.obj.LastModified}
-			}
-		}
-	}
-	return folderMapToSlice(folders), nil
-}
-
 // ListObjects lists all objects in Google Cloud Storage bucket, at prefix
 func (b GoogleCSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	for item := range b.ObjectIter(prefix) {
-		if item.err != nil {
-			return objects, item.err
-		}
-		if objectPathIsFile(item.obj.Path) {
-			objects = append(objects, *item.obj)
-		}
-	}
-	return objects, nil
+	return getObjects(b, prefix)
 }
 
-type Item struct {
-	obj *Object
-	err error
+// ListFolders lists all folders in Google Cloud Storage bucket, at prefix
+func (b GoogleCSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
 }
 
 func (b GoogleCSBackend) ObjectIter(prefix string) <-chan Item {
