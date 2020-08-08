@@ -59,6 +59,17 @@ type (
 		PutObject(path string, content []byte) error
 		DeleteObject(path string) error
 	}
+
+	// Item is the type emitted from the ObjectIter iterators
+	Item struct {
+		obj *Object
+		err error
+	}
+
+	// Backend is a generic interface for storage backends that don't natively support directories
+	ArtificialDirectoryBackend interface {
+		ObjectIter(prefix string) <-chan Item
+	}
 )
 
 // HasExtension determines whether or not an object contains a file extension
@@ -133,4 +144,33 @@ func folderMapToSlice(folderMap map[string]*Folder) []Folder {
 		folders = append(folders, *v)
 	}
 	return folders
+}
+
+func getObjects(b ArtificialDirectoryBackend, prefix string) ([]Object, error) {
+	var objects []Object
+	for item := range b.ObjectIter(prefix) {
+		if item.err != nil {
+			return objects, item.err
+		}
+		if objectPathIsFile(item.obj.Path) {
+			objects = append(objects, *item.obj)
+		}
+	}
+	return objects, nil
+}
+
+func getFolders(b ArtificialDirectoryBackend, prefix string) ([]Folder, error) {
+	folders := make(map[string]*Folder)
+	for item := range b.ObjectIter(prefix) {
+		if item.err != nil {
+			return folderMapToSlice(folders), item.err
+		}
+		if objectPathIsFolder(item.obj.Path) {
+			name := folderNameFromObjectPath(item.obj.Path)
+			if folders[name] == nil || item.obj.LastModified.After(folders[name].LastModified) {
+				folders[name] = &Folder{Path: name, LastModified: item.obj.LastModified}
+			}
+		}
+	}
+	return folderMapToSlice(folders), nil
 }
