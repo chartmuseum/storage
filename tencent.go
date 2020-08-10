@@ -107,6 +107,8 @@ func (t TencentCloudCOSBackend) ObjectIter(prefix string) <-chan Item {
 			bucketGetResult, _, err := t.Bucket.Get(context.Background(), opt)
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 			for _, obj := range bucketGetResult.Contents {
 				path := removePrefixFromObjectPath(prefix, obj.Key)

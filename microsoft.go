@@ -79,6 +79,8 @@ func (b MicrosoftBlobBackend) ObjectIter(prefix string) <-chan Item {
 	go func() {
 		if b.Container == nil {
 			ch <- Item{nil, errors.New("Unable to obtain a container reference.")}
+			close(ch)
+			return
 		}
 		var params microsoft_storage.ListBlobsParameters
 		prefix = pathutil.Join(b.Prefix, prefix)
@@ -87,6 +89,8 @@ func (b MicrosoftBlobBackend) ObjectIter(prefix string) <-chan Item {
 			response, err := b.Container.ListBlobs(params)
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 			for _, blob := range response.Blobs {
 				path := removePrefixFromObjectPath(prefix, blob.Name)

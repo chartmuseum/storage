@@ -100,6 +100,8 @@ func (b AmazonS3Backend) ObjectIter(prefix string) <-chan Item {
 			s3Result, err := b.Client.ListObjects(s3Input)
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 			for _, obj := range s3Result.Contents {
 				path := removePrefixFromObjectPath(prefix, *obj.Key)

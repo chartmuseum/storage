@@ -119,6 +119,8 @@ func (e etcdStorage) ObjectIter(prefix string) <-chan Item {
 		cancel()
 		if err != nil {
 			ch <- Item{nil, err}
+			close(ch)
+			return
 		}
 		for _, kv := range resps.Kvs {
 			if kv.Value != nil {

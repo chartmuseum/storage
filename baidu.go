@@ -88,6 +88,8 @@ func (b BaiduBOSBackend) ObjectIter(prefix string) <-chan Item {
 			lor, err := b.Client.ListObjects(b.Bucket, listObjectsArgs)
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 
 			for _, obj := range lor.Contents {
