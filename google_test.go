@@ -38,30 +38,35 @@ func (suite *GoogleTestSuite) SetupSuite() {
 	suite.NoPrefixGoogleCSBackend = backend
 
 	data := []byte("some object")
-	path := "deleteme.txt"
-	err := suite.NoPrefixGoogleCSBackend.PutObject(path, data)
+	err := suite.NoPrefixGoogleCSBackend.PutObject("deleteme.txt", data)
 	suite.Nil(err, "no error putting deleteme.txt using GoogleCS backend")
+	err = suite.NoPrefixGoogleCSBackend.PutObject("testdir/deleteme.txt", data)
+	suite.Nil(err, "no error putting testdir/deleteme.txt using GoogleCS backend")
 }
 
 func (suite *GoogleTestSuite) TearDownSuite() {
 	err := suite.NoPrefixGoogleCSBackend.DeleteObject("deleteme.txt")
 	suite.Nil(err, "no error deleting deleteme.txt using GoogleCS backend")
+	err = suite.NoPrefixGoogleCSBackend.DeleteObject("testdir/deleteme.txt")
+	suite.Nil(err, "no error deleting testdir/deleteme.txt using GoogleCS backend")
 }
 
 func (suite *GoogleTestSuite) TestListObjects() {
 	_, err := suite.BrokenGoogleCSBackend.ListObjects("")
 	suite.NotNil(err, "cannot list objects with bad bucket")
 
-	_, err = suite.NoPrefixGoogleCSBackend.ListObjects("")
+	objs, err := suite.NoPrefixGoogleCSBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
+	suite.Equal(len(objs), 1, "able to list objects")
 }
 
 func (suite *GoogleTestSuite) TestListFolders() {
 	_, err := suite.BrokenGoogleCSBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	_, err = suite.NoPrefixGoogleCSBackend.ListFolders("")
+	folders, err := suite.NoPrefixGoogleCSBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), 1, "able to list folders")
 }
 
 func (suite *GoogleTestSuite) TestGetObject() {
