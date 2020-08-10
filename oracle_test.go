@@ -38,9 +38,10 @@ func (suite *OracleTestSuite) SetupSuite() {
 	suite.NoPrefixOracleCSBackend = backend
 
 	data := []byte("some object")
-	path := "deleteme.txt"
-	err := suite.NoPrefixOracleCSBackend.PutObject(path, data)
+	err := suite.NoPrefixOracleCSBackend.PutObject("deleteme.txt", data)
 	suite.Nil(err, "no error putting deleteme.txt using OracleCS backend")
+	err = suite.NoPrefixOracleCSBackend.PutObject("testdir/deleteme.txt", data)
+	suite.Nil(err, "no error putting testdir/deleteme.txt using OracleCS backend")
 
 	suite.BrokenOracleCSBackend = &OracleCSBackend{
 		Bucket:        "fake-bucket-cant-exist-fbce123",
@@ -55,22 +56,26 @@ func (suite *OracleTestSuite) SetupSuite() {
 func (suite *OracleTestSuite) TearDownSuite() {
 	err := suite.NoPrefixOracleCSBackend.DeleteObject("deleteme.txt")
 	suite.Nil(err, "no error deleting deleteme.txt using OracleCS backend")
+	err = suite.NoPrefixOracleCSBackend.DeleteObject("testdir/deleteme.txt")
+	suite.Nil(err, "no error deleting deleteme.txt using OracleCS backend")
 }
 
 func (suite *OracleTestSuite) TestListObjects() {
 	_, err := suite.BrokenOracleCSBackend.ListObjects("")
 	suite.NotNil(err, "cannot list objects with bad bucket")
 
-	_, err = suite.NoPrefixOracleCSBackend.ListObjects("")
+	objs, err := suite.NoPrefixOracleCSBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
+	suite.Equal(len(objs), 1, "able to list objects")
 }
 
 func (suite *OracleTestSuite) TestListFolders() {
 	_, err := suite.BrokenOracleCSBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	_, err = suite.NoPrefixOracleCSBackend.ListFolders("")
+	folders, err := suite.NoPrefixOracleCSBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), 1, "able to list folders")
 }
 
 func (suite *OracleTestSuite) TestGetObject() {
