@@ -56,6 +56,14 @@ func (suite *GoogleTestSuite) TestListObjects() {
 	suite.Nil(err, "can list objects with good bucket, no prefix")
 }
 
+func (suite *GoogleTestSuite) TestListFolders() {
+	_, err := suite.BrokenGoogleCSBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixGoogleCSBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+}
+
 func (suite *GoogleTestSuite) TestGetObject() {
 	_, err := suite.BrokenGoogleCSBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad bucket")
