@@ -84,6 +84,17 @@ func (suite *AlibabaTestSuite) TestListObjects() {
 	suite.Equal(len(objs), testCount, "able to list objects")
 }
 
+func (suite *AlibabaTestSuite) TestListFolders() {
+	_, err := suite.BrokenAlibabaOSSBackend.ListObjects("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	objs, err := suite.NoPrefixAlibabaOSSBackend.ListObjects("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+
+	objs, err = suite.SSEAlibabaOSSBackend.ListObjects("")
+	suite.Nil(err, "can list objects with good bucket, SSE")
+}
+
 func (suite *AlibabaTestSuite) TestGetObject() {
 	_, err := suite.BrokenAlibabaOSSBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad bucket")
