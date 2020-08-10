@@ -17,8 +17,8 @@ limitations under the License.
 package storage
 
 import (
+	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -42,21 +42,20 @@ func (suite *NeteaseTestSuite) SetupSuite() {
 	suite.NoPrefixNeteaseNOSBackend = backend
 
 	data := []byte("some object")
-	path := "deleteme.txt"
 
 	for i := 0; i < nosTestCount; i++ {
-		newPath := strconv.Itoa(i) + path
-		err := suite.NoPrefixNeteaseNOSBackend.PutObject(newPath, data)
+		err := suite.NoPrefixNeteaseNOSBackend.PutObject(fmt.Sprintf("%ddeleteme.txt", i), data)
 		suite.Nil(err, "no error putting deleteme.txt using Netease Cloud NOS backend")
+		err = suite.NoPrefixNeteaseNOSBackend.PutObject(fmt.Sprintf("testdir%d/deleteme.txt", i), data)
+		suite.Nil(err, "no error putting testdir/deleteme.txt using Netease Cloud NOS backend")
 	}
 }
 
 func (suite *NeteaseTestSuite) TearDownSuite() {
-	path := "deleteme.txt"
 	for i := 0; i < bosTestCount; i++ {
-		newPath := strconv.Itoa(i) + path
-
-		err := suite.NoPrefixNeteaseNOSBackend.DeleteObject(newPath)
+		err := suite.NoPrefixNeteaseNOSBackend.DeleteObject(fmt.Sprintf("%ddeleteme.txt", i))
+		suite.Nil(err, "no error deleting deleteme.txt using Netease NOS backend")
+		err = suite.NoPrefixNeteaseNOSBackend.DeleteObject(fmt.Sprintf("testdir%d/deleteme.txt", i))
 		suite.Nil(err, "no error deleting deleteme.txt using Netease NOS backend")
 	}
 }
@@ -74,8 +73,9 @@ func (suite *NeteaseTestSuite) TestListFolders() {
 	_, err := suite.BrokenNeteaseNOSBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	_, err = suite.NoPrefixNeteaseNOSBackend.ListFolders("")
+	folders, err := suite.NoPrefixNeteaseNOSBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), nosTestCount, "able to list folders")
 }
 
 func (suite *NeteaseTestSuite) TestGetObject() {
