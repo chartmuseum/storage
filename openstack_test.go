@@ -56,11 +56,12 @@ func (suite *OpenstackTestSuite) SetupSuite() {
 	}
 
 	data := []byte("some object")
-	path := "deleteme.txt"
 	for _, backend := range suite.NoPrefixOpenstackOSBackend {
 		_, err := osContainers.Create(backend.Client, osContainer, nil).Extract()
 		suite.Nil(err, "error creating container %s: %v", osContainer, err)
-		err = backend.PutObject(path, data)
+		err = backend.PutObject("deleteme.txt", data)
+		suite.Nil(err, "error putting deleteme.txt using openstack backend")
+		err = backend.PutObject("testdir/deleteme.txt", data)
 		suite.Nil(err, "error putting deleteme.txt using openstack backend")
 	}
 }
@@ -69,6 +70,8 @@ func (suite *OpenstackTestSuite) TearDownSuite() {
 	for _, backend := range suite.NoPrefixOpenstackOSBackend {
 		err := backend.DeleteObject("deleteme.txt")
 		suite.Nil(err, "error deleting deleteme.txt using Openstack backend")
+		err = backend.DeleteObject("testdir/deleteme.txt")
+		suite.Nil(err, "error deleting testdir/deleteme.txt using Openstack backend")
 	}
 }
 
@@ -79,8 +82,22 @@ func (suite *OpenstackTestSuite) TestListObjects() {
 	}
 
 	for _, backend := range suite.NoPrefixOpenstackOSBackend {
-		_, err := backend.ListObjects("")
+		objs, err := backend.ListObjects("")
 		suite.Nil(err, "can list objects with good container, no prefix")
+		suite.Equal(len(objs), 1, "able to list objects")
+	}
+}
+
+func (suite *OpenstackTestSuite) TestListFolders() {
+	for _, backend := range suite.BrokenOpenstackOSBackend {
+		_, err := backend.ListFolders("")
+		suite.NotNil(err, "cannot list folders with bad container")
+	}
+
+	for _, backend := range suite.NoPrefixOpenstackOSBackend {
+		folders, err := backend.ListFolders("")
+		suite.Nil(err, "can list folders with good container, no prefix")
+		suite.Equal(len(folders), 1, "able to list folders")
 	}
 }
 
