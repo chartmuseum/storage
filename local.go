@@ -29,6 +29,12 @@ type LocalFilesystemBackend struct {
 	RootDirectory string
 }
 
+type LocalItem struct {
+	obj *Object
+	dir bool
+	err error
+}
+
 // NewLocalFilesystemBackend creates a new instance of LocalFilesystemBackend
 func NewLocalFilesystemBackend(rootDirectory string) *LocalFilesystemBackend {
 	absPath, err := filepath.Abs(rootDirectory)
@@ -41,22 +47,56 @@ func NewLocalFilesystemBackend(rootDirectory string) *LocalFilesystemBackend {
 
 // ListObjects lists all objects in root directory (depth 1)
 func (b LocalFilesystemBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	files, err := ioutil.ReadDir(pathutil.Join(b.RootDirectory, prefix))
-	if err != nil {
-		if os.IsNotExist(err) {  // OK if the directory doesnt exist yet
-			err = nil
+	objects := []Object{}
+	for item := range(b.FileIter(prefix)) {
+		if item.obj == nil || item.err != nil {
+			return objects, item.err
 		}
-		return objects, err
-	}
-	for _, f := range files {
-		if f.IsDir() {
-			continue
+		if !item.dir {
+			objects = append(objects, *item.obj)
 		}
-		object := Object{Path: f.Name(), Content: []byte{}, LastModified: f.ModTime()}
-		objects = append(objects, object)
 	}
 	return objects, nil
+}
+
+// ListFolders lists all folders in root directory (depth 1)
+func (b LocalFilesystemBackend) ListFolders(prefix string) ([]Folder, error) {
+	folders := []Folder{}
+	for item := range(b.FileIter(prefix)) {
+		if item.obj == nil || item.err != nil {
+			return folders, item.err
+		}
+		if item.dir {
+			folders = append(folders, Folder{Path: item.obj.Path, LastModified: item.obj.LastModified})
+		}
+	}
+	return folders, nil
+}
+
+func (b LocalFilesystemBackend) FileIter(prefix string) <-chan LocalItem {
+	ch := make(chan(LocalItem))
+	go func() {
+		files, err := ioutil.ReadDir(pathutil.Join(b.RootDirectory, prefix))
+		if err != nil {
+			if os.IsNotExist(err) {  // OK if the directory doesnt exist yet
+				err = nil
+			}
+			ch <- LocalItem{obj: nil, dir: false, err: err}
+		}
+		for _, f := range files {
+			ch <- LocalItem{
+				obj: &Object{
+					Path: f.Name(),
+					Content: []byte{},
+					LastModified: f.ModTime(),
+				},
+				dir: f.IsDir(),
+				err: nil,
+			}
+		}
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from root directory
