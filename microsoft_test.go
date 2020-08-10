@@ -57,6 +57,14 @@ func (suite *MicrosoftTestSuite) TestListObjects() {
 	suite.Nil(err, "can list objects with good bucket, no prefix")
 }
 
+func (suite *MicrosoftTestSuite) TestListFolders() {
+	_, err := suite.BrokenAzureBlobBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixAzureBlobBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+}
+
 func (suite *MicrosoftTestSuite) TestListObjectsWithPaging() {
 	// create 5001 objects to trigger the need of paging, since
 	// the default page size for Azure Blobs are 5000.
