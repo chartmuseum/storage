@@ -17,8 +17,8 @@ limitations under the License.
 package storage
 
 import (
+	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -42,22 +42,21 @@ func (suite *TencentTestSuite) SetupSuite() {
 	suite.NoPrefixTencentCloudCOSBackend = backend
 
 	data := []byte("some object")
-	path := "deleteme.txt"
 
 	for i := 0; i < testCounts; i++ {
-		newPath := strconv.Itoa(i) + path
-		err := suite.NoPrefixTencentCloudCOSBackend.PutObject(newPath, data)
+		err := suite.NoPrefixTencentCloudCOSBackend.PutObject(fmt.Sprintf("%ddeleteme.txt", i), data)
 		suite.Nil(err, "no error putting deleteme.txt using Tencent Cloud COS backend")
+		err = suite.NoPrefixTencentCloudCOSBackend.PutObject(fmt.Sprintf("testdir%d/deleteme.txt", i), data)
+		suite.Nil(err, "no error putting testdir/deleteme.txt using Tencent Cloud COS backend")
 	}
 }
 
 func (suite *TencentTestSuite) TearDownSuite() {
-	path := "deleteme.txt"
 	for i := 0; i < testCounts; i++ {
-		newPath := strconv.Itoa(i) + path
-
-		err := suite.NoPrefixTencentCloudCOSBackend.DeleteObject(newPath)
+		err := suite.NoPrefixTencentCloudCOSBackend.DeleteObject(fmt.Sprintf("%ddeleteme.txt", i))
 		suite.Nil(err, "no error deleting deleteme.txt using Tencent Cloud COS backend")
+		err = suite.NoPrefixTencentCloudCOSBackend.DeleteObject(fmt.Sprintf("testdir%d/deleteme.txt", i))
+		suite.Nil(err, "no error deleting testdir/deleteme.txt using Tencent Cloud COS backend")
 	}
 }
 
@@ -74,8 +73,9 @@ func (suite *TencentTestSuite) TestListFolders() {
 	_, err := suite.BrokenTencentCloudCOSBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	_, err = suite.NoPrefixTencentCloudCOSBackend.ListFolders("")
+	folders, err := suite.NoPrefixTencentCloudCOSBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), testCounts, "able to list folders")
 }
 
 func (suite *TencentTestSuite) TestGetObject() {
