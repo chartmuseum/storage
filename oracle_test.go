@@ -65,6 +65,14 @@ func (suite *OracleTestSuite) TestListObjects() {
 	suite.Nil(err, "can list objects with good bucket, no prefix")
 }
 
+func (suite *OracleTestSuite) TestListFolders() {
+	_, err := suite.BrokenOracleCSBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixOracleCSBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+}
+
 func (suite *OracleTestSuite) TestGetObject() {
 	_, err := suite.BrokenOracleCSBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad bucket")
