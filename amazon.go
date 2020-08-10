@@ -84,7 +84,7 @@ func (b AmazonS3Backend) ListObjects(prefix string) ([]Object, error) {
 }
 
 // ListFolders lists all folders in Amazon S3 bucket, at prefix
-func (b AmazonS3Backend) ListFolders(prefix string) ([]Object, error) {
+func (b AmazonS3Backend) ListFolders(prefix string) ([]Folder, error) {
 	return getFolders(b, prefix)
 }
 
@@ -99,7 +99,7 @@ func (b AmazonS3Backend) ObjectIter(prefix string) <-chan Item {
 		for {
 			s3Result, err := b.Client.ListObjects(s3Input)
 			if err != nil {
-				ch <- Item{objects, err}
+				ch <- Item{nil, err}
 			}
 			for _, obj := range s3Result.Contents {
 				path := removePrefixFromObjectPath(prefix, *obj.Key)
