@@ -55,6 +55,7 @@ type (
 	// Backend is a generic interface for storage backends
 	Backend interface {
 		ListObjects(prefix string) ([]Object, error)
+		ListFolders(prefix string) ([]Folder, error)
 		GetObject(path string) (Object, error)
 		PutObject(path string, content []byte) error
 		DeleteObject(path string) error
