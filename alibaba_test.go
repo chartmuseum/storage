@@ -85,13 +85,13 @@ func (suite *AlibabaTestSuite) TestListObjects() {
 }
 
 func (suite *AlibabaTestSuite) TestListFolders() {
-	_, err := suite.BrokenAlibabaOSSBackend.ListObjects("")
+	_, err := suite.BrokenAlibabaOSSBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	objs, err := suite.NoPrefixAlibabaOSSBackend.ListObjects("")
+	_, err = suite.NoPrefixAlibabaOSSBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
 
-	objs, err = suite.SSEAlibabaOSSBackend.ListObjects("")
+	_, err = suite.SSEAlibabaOSSBackend.ListFolders("")
 	suite.Nil(err, "can list objects with good bucket, SSE")
 }
 
