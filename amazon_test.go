@@ -71,6 +71,17 @@ func (suite *AmazonTestSuite) TestListObjects() {
 	suite.Nil(err, "can list objects with good bucket, SSE")
 }
 
+func (suite *AmazonTestSuite) TestListFolders() {
+	_, err := suite.BrokenAmazonS3Backend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixAmazonS3Backend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+
+	_, err = suite.SSEAmazonS3Backend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, SSE")
+}
+
 func (suite *AmazonTestSuite) TestGetObject() {
 	_, err := suite.BrokenAmazonS3Backend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad bucket")
