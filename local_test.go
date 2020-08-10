@@ -44,6 +44,11 @@ func (suite *LocalTestSuite) TestListObjects() {
 	suite.Nil(err, "list objects does not return error if dir does not exist")
 }
 
+func (suite *LocalTestSuite) TestListFolders() {
+	_, err := suite.LocalFilesystemBackend.ListFolders("")
+	suite.Nil(err, "list folders does not return error if dir does not exist")
+}
+
 func (suite *LocalTestSuite) TestGetObject() {
 	_, err := suite.LocalFilesystemBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad path")
