@@ -68,7 +68,14 @@ func (suite *TencentTestSuite) TestListObjects() {
 	objs, err := suite.NoPrefixTencentCloudCOSBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
 	suite.Equal(len(objs), testCounts, "able to list objects")
+}
 
+func (suite *TencentTestSuite) TestListFolders() {
+	_, err := suite.BrokenTencentCloudCOSBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixTencentCloudCOSBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
 }
 
 func (suite *TencentTestSuite) TestGetObject() {
