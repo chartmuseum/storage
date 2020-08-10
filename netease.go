@@ -81,48 +81,50 @@ func NewNeteaseNOSBackend(bucket string, prefix string, endpoint string) *Neteas
 
 // ListObjects lists all objects in Netease Cloud NOS bucket, at prefix
 func (b NeteaseNOSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
+	return getObjects(b, prefix)
+}
 
-	prefix = pathutil.Join(b.Prefix, prefix)
+// ListFolders lists all folders in Netease Cloud NOS bucket, at prefix
+func (b NeteaseNOSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-	listRequest := &model.ListObjectsRequest{
-		Bucket:    b.Bucket,
-		Prefix:    prefix,
-		Delimiter: "",
-		Marker:    "",
-		MaxKeys:   100,
-	}
-
-	for {
-		var lor *model.ListObjectsResult
-		lor, err := b.Client.ListObjects(listRequest)
-		if err != nil {
-			return objects, nil
+func (b NeteaseNOSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		listRequest := &model.ListObjectsRequest{
+			Bucket:    b.Bucket,
+			Prefix:    prefix,
+			Delimiter: "",
+			Marker:    "",
+			MaxKeys:   100,
 		}
-
-		for _, obj := range lor.Contents {
-			path := removePrefixFromObjectPath(prefix, obj.Key)
-			if objectPathIsInvalid(path) {
-				continue
+		for {
+			var lor *model.ListObjectsResult
+			lor, err := b.Client.ListObjects(listRequest)
+			if err != nil {
+				ch <- Item{nil, err}
 			}
-
-			local, _ := time.LoadLocation("Local")
-			// LastModified time layout in NOS is 2006-01-02T15:04:05 -0700
-			t, _ := time.ParseInLocation("2006-01-02T15:04:05 -0700", obj.LastModified, local)
-			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: t,
+			for _, obj := range lor.Contents {
+				path := removePrefixFromObjectPath(prefix, obj.Key)
+				local, _ := time.LoadLocation("Local")
+				// LastModified time layout in NOS is 2006-01-02T15:04:05 -0700
+				t, _ := time.ParseInLocation("2006-01-02T15:04:05 -0700", obj.LastModified, local)
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      []byte{},
+						LastModified: t,
+					}, nil }
 			}
-			objects = append(objects, object)
+			if !lor.IsTruncated {
+				break
+			}
 		}
-		if !lor.IsTruncated {
-			break
-		}
-
-	}
-
-	return objects, nil
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from Netease Cloud NOS bucket, at prefix
