@@ -70,6 +70,14 @@ func (suite *NeteaseTestSuite) TestListObjects() {
 	suite.Equal(len(objs), nosTestCount, "able to list objects")
 }
 
+func (suite *NeteaseTestSuite) TestListFolders() {
+	_, err := suite.BrokenNeteaseNOSBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixNeteaseNOSBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+}
+
 func (suite *NeteaseTestSuite) TestGetObject() {
 	_, err := suite.BrokenNeteaseNOSBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad bucket")
