@@ -39,30 +39,35 @@ func (suite *MicrosoftTestSuite) SetupSuite() {
 	suite.NoPrefixAzureBlobBackend = backend
 
 	data := []byte("some object")
-	path := "deleteme.txt"
-	err := suite.NoPrefixAzureBlobBackend.PutObject(path, data)
+	err := suite.NoPrefixAzureBlobBackend.PutObject("deleteme.txt", data)
 	suite.Nil(err, "no error putting deleteme.txt using Azure backend")
+	err = suite.NoPrefixAzureBlobBackend.PutObject("testdir/deleteme.txt", data)
+	suite.Nil(err, "no error putting testdir/deleteme.txt using Azure backend")
 }
 
 func (suite *MicrosoftTestSuite) TearDownSuite() {
 	err := suite.NoPrefixAzureBlobBackend.DeleteObject("deleteme.txt")
 	suite.Nil(err, "no error deleting deleteme.txt using Azure backend")
+	err = suite.NoPrefixAzureBlobBackend.DeleteObject("testdir/deleteme.txt")
+	suite.Nil(err, "no error deleting testdir/deleteme.txt using Azure backend")
 }
 
 func (suite *MicrosoftTestSuite) TestListObjects() {
 	_, err := suite.BrokenAzureBlobBackend.ListObjects("")
 	suite.NotNil(err, "cannot list objects with bad bucket")
 
-	_, err = suite.NoPrefixAzureBlobBackend.ListObjects("")
+	objs, err := suite.NoPrefixAzureBlobBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
+	suite.Equal(len(objs), 1, "able to list objects")
 }
 
 func (suite *MicrosoftTestSuite) TestListFolders() {
 	_, err := suite.BrokenAzureBlobBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	_, err = suite.NoPrefixAzureBlobBackend.ListFolders("")
+	folders, err := suite.NoPrefixAzureBlobBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), 1, "able to list folders")
 }
 
 func (suite *MicrosoftTestSuite) TestListObjectsWithPaging() {
