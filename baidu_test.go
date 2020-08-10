@@ -70,6 +70,14 @@ func (suite *BaiduTestSuite) TestListObjects() {
 	suite.Equal(len(objs), bosTestCount, "able to list objects")
 }
 
+func (suite *BaiduTestSuite) TestListFolders() {
+	_, err := suite.BrokenBaiduBOSBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	_, err = suite.NoPrefixBaiduBOSBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+}
+
 func (suite *BaiduTestSuite) TestGetObject() {
 	_, err := suite.BrokenBaiduBOSBackend.GetObject("this-file-cannot-possibly-exist.tgz")
 	suite.NotNil(err, "cannot get objects with bad bucket")
