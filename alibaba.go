@@ -93,6 +93,8 @@ func (b AlibabaCloudOSSBackend) ObjectIter(prefix string) <-chan Item {
 			lor, err := b.Bucket.ListObjects(oss.MaxKeys(50), marker, ossPrefix)
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 			for _, obj := range lor.Objects {
 				path := removePrefixFromObjectPath(prefix, obj.Key)

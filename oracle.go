@@ -150,6 +150,8 @@ func (b OracleCSBackend) ObjectIter(prefix string) <-chan Item {
 		rc, err := b.Client.ListObjects(b.Context, request)
 		if err != nil {
 			ch <- Item{nil, err}
+			close(ch)
+			return
 		}
 
 		for i := 0; i < len(rc.ListObjects.Objects); i++ {

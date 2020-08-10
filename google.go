@@ -74,6 +74,8 @@ func (b GoogleCSBackend) ObjectIter(prefix string) <-chan Item {
 			}
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 			path := removePrefixFromObjectPath(prefix, attrs.Name)
 			ch <- Item{

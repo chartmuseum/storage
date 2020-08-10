@@ -82,6 +82,8 @@ func (b LocalFilesystemBackend) FileIter(prefix string) <-chan LocalItem {
 				err = nil
 			}
 			ch <- LocalItem{obj: nil, dir: false, err: err}
+			close(ch)
+			return
 		}
 		for _, f := range files {
 			ch <- LocalItem{

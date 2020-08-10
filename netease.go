@@ -105,6 +105,8 @@ func (b NeteaseNOSBackend) ObjectIter(prefix string) <-chan Item {
 			lor, err := b.Client.ListObjects(listRequest)
 			if err != nil {
 				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
 			for _, obj := range lor.Contents {
 				path := removePrefixFromObjectPath(prefix, obj.Key)
