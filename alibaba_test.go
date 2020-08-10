@@ -17,11 +17,11 @@ limitations under the License.
 package storage
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"strconv"
 )
 
 type AlibabaTestSuite struct {
@@ -49,25 +49,39 @@ func (suite *AlibabaTestSuite) SetupSuite() {
 	path := "deleteme.txt"
 
 	for i := 0; i < testCount; i++ {
-		newPath := strconv.Itoa(i) + path
-		err := suite.NoPrefixAlibabaOSSBackend.PutObject(newPath, data)
+		testFilePath := fmt.Sprintf("%d%s", i, path)
+		testDirFilePath := fmt.Sprintf("testdir%d/%s", i, path)
+		err := suite.NoPrefixAlibabaOSSBackend.PutObject(testFilePath, data)
 		suite.Nil(err, "no error putting deleteme.txt using Alibaba Cloud OSS backend")
 
-		err = suite.SSEAlibabaOSSBackend.PutObject(newPath, data)
+		err = suite.NoPrefixAlibabaOSSBackend.PutObject(testDirFilePath, data)
+		suite.Nil(err, "no error putting testdir/deleteme.txt using Alibaba Cloud OSS backend")
+
+		err = suite.SSEAlibabaOSSBackend.PutObject(testFilePath, data)
 		suite.Nil(err, "no error putting deleteme.txt using Alibaba Cloud OSS backend (SSE)")
+
+		err = suite.SSEAlibabaOSSBackend.PutObject(testDirFilePath, data)
+		suite.Nil(err, "no error putting testdir/deleteme.txt using Alibaba Cloud OSS backend (SSE)")
 	}
 }
 
 func (suite *AlibabaTestSuite) TearDownSuite() {
 	path := "deleteme.txt"
 	for i := 0; i < testCount; i++ {
-		newPath := strconv.Itoa(i) + path
+		testFilePath := fmt.Sprintf("%d%s", i, path)
+		testDirFilePath := fmt.Sprintf("testdir%d/%s", i, path)
 
-		err := suite.NoPrefixAlibabaOSSBackend.DeleteObject(newPath)
+		err := suite.NoPrefixAlibabaOSSBackend.DeleteObject(testFilePath)
 		suite.Nil(err, "no error deleting deleteme.txt using AlibabaOSS backend")
 
-		err = suite.SSEAlibabaOSSBackend.DeleteObject(newPath)
+		err = suite.NoPrefixAlibabaOSSBackend.DeleteObject(testDirFilePath)
+		suite.Nil(err, "no error deleting testdir/deleteme.txt using AlibabaOSS backend")
+
+		err = suite.SSEAlibabaOSSBackend.DeleteObject(testFilePath)
 		suite.Nil(err, "no error deleting deleteme.txt using AlibabaOSS backend")
+
+		err = suite.SSEAlibabaOSSBackend.DeleteObject(testDirFilePath)
+		suite.Nil(err, "no error deleting testdir/deleteme.txt using AlibabaOSS backend")
 	}
 }
 
@@ -88,11 +102,13 @@ func (suite *AlibabaTestSuite) TestListFolders() {
 	_, err := suite.BrokenAlibabaOSSBackend.ListFolders("")
 	suite.NotNil(err, "cannot list folders with bad bucket")
 
-	_, err = suite.NoPrefixAlibabaOSSBackend.ListFolders("")
+	folders, err := suite.NoPrefixAlibabaOSSBackend.ListFolders("")
 	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), testCount, "able to list folders")
 
-	_, err = suite.SSEAlibabaOSSBackend.ListFolders("")
+	folders, err = suite.SSEAlibabaOSSBackend.ListFolders("")
 	suite.Nil(err, "can list objects with good bucket, SSE")
+	suite.Equal(len(folders), testCount, "able to list folders")
 }
 
 func (suite *AlibabaTestSuite) TestGetObject() {
