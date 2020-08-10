@@ -40,6 +40,16 @@ func (c *CsEtcdSuite) TestListObjecs() {
 
 }
 
+func (c *CsEtcdSuite) TestListFolders() {
+	c.etcd.PutObject("testdir/listtest1",[]byte("puttestetcd"))
+	if folders,err:=c.etcd.ListFolders("listtest/");err!=nil{
+		c.Fail("etcd list folders err:%s",err)
+	}else{
+		fmt.Println(folders)
+	}
+
+}
+
 func (c *CsEtcdSuite) TestGetObject(){
 
 	c.etcd.PutObject("gettest",[]byte("testdate"))
