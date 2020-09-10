@@ -186,6 +186,26 @@ func NewOpenstackOSBackendV1Auth(container string, prefix string, caCert string)
 		Transport: httpTransport,
 	}
 
+	// gophercloud does not support reauth for Swift V1 clients, so we handle this here.
+	// This is more or less a carbon copy of what gophercloud/openstack/client.go does vor v2.
+	//
+	// here we're creating a throw-away client (tac). it's a copy of the user's provider client, but
+	// with the token and reauth func zeroed out. This should retry authentication only once.
+	tac := *provider
+	tac.SetThrowaway(true)
+	tac.ReauthFunc = nil
+	tac.SetTokenAndAuthResult(nil)
+	tao := authOpts
+	provider.ReauthFunc = func() error {
+		auth, err := swauth.Auth(&tac, tao).Extract()
+		if err != nil {
+			return err
+		}
+		// safely copy the token from tac to this ProviderClient
+		provider.SetToken(auth.Token)
+		return nil
+	}
+
 	client, err := swauth.NewObjectStorageV1(provider, authOpts)
 	if err != nil {
 		panic(fmt.Sprintf("Openstack (object storage): %s", err))
