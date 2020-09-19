@@ -26,9 +26,16 @@ import (
 type (
 	// Object is a generic representation of a storage object
 	Object struct {
+		Meta         Metadata
 		Path         string
 		Content      []byte
 		LastModified time.Time
+	}
+	// Metadata represents the meta information of the object
+	// includes object name , object version , etc...
+	Metadata struct {
+		Name    string
+		Version string
 	}
 
 	// ObjectSliceDiff provides information on what has changed since last calling ListObjects
