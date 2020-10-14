@@ -30,6 +30,11 @@ import (
 	"github.com/NetEase-Object-Storage/nos-golang-sdk/nosclient"
 )
 
+const (
+	RFC1123_NOS     = "Mon, 02 Jan 2006 15:04:05 Asia/Shanghai"
+	RFC1123_NOS_GMT = "Mon, 02 Jan 2006 15:04:05 GMT"
+)
+
 // NeteaseNOSBackend is a storage backend for Netease Cloud NOS
 type NeteaseNOSBackend struct {
 	Client nosclient.NosClient
@@ -97,7 +102,7 @@ func (b NeteaseNOSBackend) ListObjects(prefix string) ([]Object, error) {
 		var lor *model.ListObjectsResult
 		lor, err := b.Client.ListObjects(listRequest)
 		if err != nil {
-			return objects, nil
+			return objects, err
 		}
 
 		for _, obj := range lor.Contents {
@@ -163,13 +168,18 @@ func (b NeteaseNOSBackend) GetObject(path string) (Object, error) {
 	}
 
 	m := meta.Metadata
-	// 	"Last-Modified" 是从nos获取的存储 最后修改时间 的key
+	// 	"Last-Modified" is the key for last modified time。format is "Thu, 18 Jun 2020 10:53:53 GMT"
 	if t, ok := m["Last-Modified"]; ok {
-
-		local, _ := time.LoadLocation("Local")
-		// NOS的LastModified格式为 2019-04-18T16:55:39 +0800
-		lastModified, _ := time.ParseInLocation("2006-01-02T15:04:05 -0700", t, local)
-		object.LastModified = lastModified
+		modTime, err := time.Parse(RFC1123_NOS_GMT, t)
+		if err != nil {
+			// RFC1123 is CST time, should reduce 8 hours
+			modTime, err = time.Parse(RFC1123_NOS, t)
+			if err != nil {
+				return object, err
+			}
+			modTime.Add(-8 * time.Hour)
+		}
+		object.LastModified = modTime
 	}
 
 	return object, nil
