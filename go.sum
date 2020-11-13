@@ -61,8 +61,8 @@ github.com/aliyun/aliyun-oss-go-sdk v2.1.4+incompatible h1:6t4QUhWVCcnilQy+d3aO0
 github.com/aliyun/aliyun-oss-go-sdk v2.1.4+incompatible/go.mod h1:T/Aws4fEfogEE9v+HPhhw+CntffsBHJ8nXQCwKr0/g8=
 github.com/aws/aws-sdk-go v1.35.26 h1:MawRvDpAp/Ai859dPC1xo1fdU/BIkijoHj0DwXLXXkI=
 github.com/aws/aws-sdk-go v1.35.26/go.mod h1:tlPOdRjfxPBpNIwqDj61rmsnA85v9jc0Ps9+muhnW+k=
-github.com/baidubce/bce-sdk-go v0.9.30 h1:CA8WSaRftUyBX2ZbtE+jWPRgFnyGF3tQxpoYBGVm9kI=
-github.com/baidubce/bce-sdk-go v0.9.30/go.mod h1:zbYJMQwE4IZuyrJiFO8tO8NbtYiKTFTbwh4eIsqjVdg=
+github.com/baidubce/bce-sdk-go v0.9.31 h1:NK1QKEVvaAqKe8tNmkyeFCVSnFwj///Y4ltDvHahw0A=
+github.com/baidubce/bce-sdk-go v0.9.31/go.mod h1:zbYJMQwE4IZuyrJiFO8tO8NbtYiKTFTbwh4eIsqjVdg=
 github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f h1:ZNv7On9kyUzm7fvRZumSyy/IUiSC7AzL0I1jKKtwooA=
 github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f/go.mod h1:AuiFmCCPBSrqvVMvuqFuk0qogytodnVFVSN5CeJB8Gc=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
