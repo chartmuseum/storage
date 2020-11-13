@@ -10,13 +10,13 @@ replace (
 
 require (
 	cloud.google.com/go/storage v1.12.0
-	github.com/Azure/azure-sdk-for-go v48.1.0+incompatible
+	github.com/Azure/azure-sdk-for-go v48.2.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.11 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-00010101000000-000000000000
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.4+incompatible
 	github.com/aws/aws-sdk-go v1.35.27
-	github.com/baidubce/bce-sdk-go v0.9.30
+	github.com/baidubce/bce-sdk-go v0.9.31
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/dnaeon/go-vcr v1.1.0 // indirect
 	github.com/gophercloud/gophercloud v0.14.0
