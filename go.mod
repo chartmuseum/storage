@@ -25,6 +25,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.18
 	go.etcd.io/etcd v0.0.0-00010101000000-000000000000
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
-	google.golang.org/api v0.36.0
+	golang.org/x/net v0.0.0-20201209123823-ac852fbbde11
+	google.golang.org/api v0.37.0
 )
