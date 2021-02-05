@@ -26,5 +26,5 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.19
 	go.etcd.io/etcd v0.0.0-00010101000000-000000000000
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-	google.golang.org/api v0.38.0
+	google.golang.org/api v0.39.0
 )
