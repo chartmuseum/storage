@@ -9,7 +9,7 @@ replace (
 )
 
 require (
-	cloud.google.com/go/storage v1.13.0
+	cloud.google.com/go/storage v1.14.0
 	github.com/Azure/azure-sdk-for-go v48.2.2+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.11 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
