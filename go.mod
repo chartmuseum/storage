@@ -23,7 +23,7 @@ require (
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.21
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.22
 	go.etcd.io/etcd v0.0.0-00010101000000-000000000000
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	google.golang.org/api v0.41.0
