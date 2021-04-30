@@ -67,44 +67,53 @@ func NewBaiDuBOSBackend(bucket string, prefix string, endpoint string) *BaiduBOS
 
 // ListObjects lists all objects in Baidu Cloud BOS bucket, at prefix
 func (b BaiduBOSBackend) ListObjects(prefix string) ([]Object, error) {
-    var objects []Object
+	return getObjects(b, prefix)
+}
 
-    prefix = pathutil.Join(b.Prefix, prefix)
-    listObjectsArgs := &api.ListObjectsArgs{
-        Prefix:  prefix,
-        Marker:  "",
-        MaxKeys: 1000,
-    }
-    for {
-        lor, err := b.Client.ListObjects(b.Bucket, listObjectsArgs)
-        if err != nil {
-            return objects, err
-        }
+// ListFolders lists all folders in Baidu Cloud BOS bucket, at prefix
+func (b BaiduBOSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-        for _, obj := range lor.Contents {
-            path := removePrefixFromObjectPath(prefix, obj.Key)
-            if objectPathIsInvalid(path) {
-                continue
-            }
-            lastModified, err := time.Parse(time.RFC3339, obj.LastModified)
-            if err != nil {
-                continue
-            }
-            object := Object{
-                Path:         path,
-                Content:      []byte{},
-                LastModified: lastModified,
-            }
-            objects = append(objects, object)
-        }
-        if !lor.IsTruncated {
-            break
-        }
-        listObjectsArgs.Prefix = lor.Prefix
-        listObjectsArgs.Marker = lor.NextMarker
-    }
+func (b BaiduBOSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		listObjectsArgs := &api.ListObjectsArgs{
+			Prefix:  prefix,
+			Marker:  "",
+			MaxKeys: 1000,
+		}
+		for {
+			lor, err := b.Client.ListObjects(b.Bucket, listObjectsArgs)
+			if err != nil {
+				ch <- Item{nil, err}
+				close(ch)
+				return
+			}
 
-    return objects, nil
+			for _, obj := range lor.Contents {
+				path := removePrefixFromObjectPath(prefix, obj.Key)
+				lastModified, err := time.Parse(time.RFC3339, obj.LastModified)
+				if err != nil {
+					continue
+				}
+				ch <- Item{
+					&Object{
+						Path:		 path,
+						Content:	  []byte{},
+						LastModified: lastModified,
+					}, nil }
+			}
+			if !lor.IsTruncated {
+				break
+			}
+			listObjectsArgs.Prefix = lor.Prefix
+			listObjectsArgs.Marker = lor.NextMarker
+		}
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from Baidu Cloud BOS bucket, at prefix

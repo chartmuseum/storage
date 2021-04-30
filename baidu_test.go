@@ -17,8 +17,8 @@ limitations under the License.
 package storage
 
 import (
+	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -45,8 +45,10 @@ func (suite *BaiduTestSuite) SetupSuite() {
 	path := "deleteme.txt"
 
 	for i := 0; i < bosTestCount; i++ {
-		newPath := strconv.Itoa(i) + path
-		err := suite.NoPrefixBaiduBOSBackend.PutObject(newPath, data)
+		testFilePath := fmt.Sprintf("%d%s", i, path)
+		testDirFilePath := fmt.Sprintf("testdir%d/%s", i, path)
+		err := suite.NoPrefixBaiduBOSBackend.PutObject(testFilePath, data)
+		err = suite.NoPrefixBaiduBOSBackend.PutObject(testDirFilePath, data)
 		suite.Nil(err, "no error putting deleteme.txt using Baidu Cloud BOS backend")
 	}
 }
@@ -54,9 +56,11 @@ func (suite *BaiduTestSuite) SetupSuite() {
 func (suite *BaiduTestSuite) TearDownSuite() {
 	path := "deleteme.txt"
 	for i := 0; i < bosTestCount; i++ {
-		newPath := strconv.Itoa(i) + path
+		testFilePath := fmt.Sprintf("%d%s", i, path)
+		testDirFilePath := fmt.Sprintf("testdir%d/%s", i, path)
 
-		err := suite.NoPrefixBaiduBOSBackend.DeleteObject(newPath)
+		err := suite.NoPrefixBaiduBOSBackend.DeleteObject(testFilePath)
+		err = suite.NoPrefixBaiduBOSBackend.DeleteObject(testDirFilePath)
 		suite.Nil(err, "no error deleting deleteme.txt using BaiduBOS backend")
 	}
 }
@@ -68,6 +72,15 @@ func (suite *BaiduTestSuite) TestListObjects() {
 	objs, err := suite.NoPrefixBaiduBOSBackend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
 	suite.Equal(len(objs), bosTestCount, "able to list objects")
+}
+
+func (suite *BaiduTestSuite) TestListFolders() {
+	_, err := suite.BrokenBaiduBOSBackend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	folders, err := suite.NoPrefixBaiduBOSBackend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), bosTestCount, "able to list folders")
 }
 
 func (suite *BaiduTestSuite) TestGetObject() {

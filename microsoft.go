@@ -35,7 +35,6 @@ type MicrosoftBlobBackend struct {
 
 // NewMicrosoftBlobBackend creates a new instance of MicrosoftBlobBackend
 func NewMicrosoftBlobBackend(container string, prefix string) *MicrosoftBlobBackend {
-
 	// From the Azure portal, get your storage account name and key and set environment variables.
 	accountName, accountKey := os.Getenv("AZURE_STORAGE_ACCOUNT"), os.Getenv("AZURE_STORAGE_ACCESS_KEY")
 	var serviceBaseURL, apiVersion string
@@ -67,45 +66,52 @@ func NewMicrosoftBlobBackend(container string, prefix string) *MicrosoftBlobBack
 
 // ListObjects lists all objects in Microsoft Azure Blob Storage container
 func (b MicrosoftBlobBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
+	return getObjects(b, prefix)
+}
 
-	if b.Container == nil {
-		return objects, errors.New("Unable to obtain a container reference.")
-	}
+// ListFolders lists all folders in Microsoft Azure Blob Storage container
+func (b MicrosoftBlobBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-	var params microsoft_storage.ListBlobsParameters
-	prefix = pathutil.Join(b.Prefix, prefix)
-	params.Prefix = prefix
-
-	for {
-		response, err := b.Container.ListBlobs(params)
-		if err != nil {
-			return objects, err
+func (b MicrosoftBlobBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		if b.Container == nil {
+			ch <- Item{nil, errors.New("Unable to obtain a container reference.")}
+			close(ch)
+			return
 		}
-
-		for _, blob := range response.Blobs {
-			path := removePrefixFromObjectPath(prefix, blob.Name)
-			if objectPathIsInvalid(path) {
-				continue
+		var params microsoft_storage.ListBlobsParameters
+		prefix = pathutil.Join(b.Prefix, prefix)
+		params.Prefix = prefix
+		for {
+			response, err := b.Container.ListBlobs(params)
+			if err != nil {
+				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
-
-			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: time.Time(blob.Properties.LastModified),
+			for _, blob := range response.Blobs {
+				path := removePrefixFromObjectPath(prefix, blob.Name)
+				if objectPathIsInvalid(path) {
+					continue
+				}
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      []byte{},
+						LastModified: time.Time(blob.Properties.LastModified),
+					}, nil }
 			}
-
-			objects = append(objects, object)
+			if response.NextMarker == "" {
+				break
+			}
+			params.Marker = response.NextMarker
 		}
-
-		if response.NextMarker == "" {
-			break
-		}
-
-		params.Marker = response.NextMarker
-	}
-
-	return objects, nil
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from Microsoft Azure Blob Storage, at path

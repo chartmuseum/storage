@@ -72,38 +72,48 @@ func NewAlibabaCloudOSSBackend(bucket string, prefix string, endpoint string, ss
 	return b
 }
 
+
 // ListObjects lists all objects in Alibaba Cloud OSS bucket, at prefix
 func (b AlibabaCloudOSSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
+	return getObjects(b, prefix)
+}
 
-	prefix = pathutil.Join(b.Prefix, prefix)
-	ossPrefix := oss.Prefix(prefix)
-	marker := oss.Marker("")
-	for {
-		lor, err := b.Bucket.ListObjects(oss.MaxKeys(50), marker, ossPrefix)
-		if err != nil {
-			return objects, err
-		}
-		for _, obj := range lor.Objects {
-			path := removePrefixFromObjectPath(prefix, obj.Key)
-			if objectPathIsInvalid(path) {
-				continue
-			}
-			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: obj.LastModified,
-			}
-			objects = append(objects, object)
-		}
-		if !lor.IsTruncated {
-			break
-		}
-		ossPrefix = oss.Prefix(lor.Prefix)
-		marker = oss.Marker(lor.NextMarker)
-	}
+// ListFolders lists all folders in Alibaba Cloud OSS bucket, at prefix
+func (b AlibabaCloudOSSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-	return objects, nil
+func (b AlibabaCloudOSSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		ossPrefix := oss.Prefix(prefix)
+		marker := oss.Marker("")
+		for {
+			lor, err := b.Bucket.ListObjects(oss.MaxKeys(50), marker, ossPrefix)
+			if err != nil {
+				ch <- Item{nil, err}
+				close(ch)
+				return
+			}
+			for _, obj := range lor.Objects {
+				path := removePrefixFromObjectPath(prefix, obj.Key)
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      []byte{},
+						LastModified: obj.LastModified,
+					}, nil }
+			}
+			if !lor.IsTruncated {
+				break
+			}
+			ossPrefix = oss.Prefix(lor.Prefix)
+			marker = oss.Marker(lor.NextMarker)
+		}
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from Alibaba Cloud OSS bucket, at prefix

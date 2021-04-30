@@ -38,6 +38,12 @@ type (
 		Version string
 	}
 
+	// Object is a generic representation of a storage object folder
+	Folder struct {
+		Path         string
+		LastModified time.Time
+	}
+
 	// ObjectSliceDiff provides information on what has changed since last calling ListObjects
 	ObjectSliceDiff struct {
 		Change  bool
@@ -49,9 +55,21 @@ type (
 	// Backend is a generic interface for storage backends
 	Backend interface {
 		ListObjects(prefix string) ([]Object, error)
+		ListFolders(prefix string) ([]Folder, error)
 		GetObject(path string) (Object, error)
 		PutObject(path string, content []byte) error
 		DeleteObject(path string) error
+	}
+
+	// Item is the type emitted from the ObjectIter iterators
+	Item struct {
+		obj *Object
+		err error
+	}
+
+	// Backend is a generic interface for storage backends that don't natively support directories
+	ArtificialDirectoryBackend interface {
+		ObjectIter(prefix string) <-chan Item
 	}
 )
 
@@ -107,4 +125,53 @@ func removePrefixFromObjectPath(prefix string, path string) string {
 
 func objectPathIsInvalid(path string) bool {
 	return strings.Contains(path, "/") || path == ""
+}
+
+func objectPathIsFile(path string) bool {
+	return !strings.Contains(path, "/") && path != ""
+}
+
+func objectPathIsFolder(path string) bool {
+	return strings.Contains(path, "/") && path != ""
+}
+
+func folderNameFromObjectPath(path string) string {
+	return path[0:strings.IndexRune(path, '/')]
+}
+
+func folderMapToSlice(folderMap map[string]*Folder) []Folder {
+	folders := make([]Folder, 0, len(folderMap))
+	for _, v := range folderMap {
+		folders = append(folders, *v)
+	}
+	return folders
+}
+
+func getObjects(b ArtificialDirectoryBackend, prefix string) ([]Object, error) {
+	var objects []Object
+	for item := range b.ObjectIter(prefix) {
+		if item.err != nil {
+			return objects, item.err
+		}
+		if objectPathIsFile(item.obj.Path) {
+			objects = append(objects, *item.obj)
+		}
+	}
+	return objects, nil
+}
+
+func getFolders(b ArtificialDirectoryBackend, prefix string) ([]Folder, error) {
+	folders := make(map[string]*Folder)
+	for item := range b.ObjectIter(prefix) {
+		if item.err != nil {
+			return folderMapToSlice(folders), item.err
+		}
+		if objectPathIsFolder(item.obj.Path) {
+			name := folderNameFromObjectPath(item.obj.Path)
+			if folders[name] == nil || item.obj.LastModified.After(folders[name].LastModified) {
+				folders[name] = &Folder{Path: name, LastModified: item.obj.LastModified}
+			}
+		}
+	}
+	return folderMapToSlice(folders), nil
 }

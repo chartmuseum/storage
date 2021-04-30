@@ -43,7 +43,6 @@ type OracleCSBackend struct {
 
 // NewOracleCSBackend creates a new instance of OracleCSBackend
 func NewOracleCSBackend(bucket string, prefix string, region string, compartmentId string) *OracleCSBackend {
-
 	var config common.ConfigurationProvider
 	var err error
 
@@ -130,41 +129,49 @@ func getNamespace(ctx context.Context, c objectstorage.ObjectStorageClient) (str
 
 // ListObjects lists all objects in OCI Object Storage bucket, at prefix
 func (b OracleCSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
+	return getObjects(b, prefix)
+}
 
-	request := objectstorage.ListObjectsRequest{
-		NamespaceName: &b.Namespace,
-		BucketName:    &b.Bucket,
-		Prefix:        &prefix,
-	}
+// ListFolders lists all folders in OCI Folder Storage bucket, at prefix
+func (b OracleCSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-	rc, err := b.Client.ListObjects(b.Context, request)
-	if err != nil {
-		return objects, err
-	}
-
-	for i := 0; i < len(rc.ListObjects.Objects); i++ {
-		attrs := rc.ListObjects.Objects[i]
-
-		path := removePrefixFromObjectPath(prefix, *attrs.Name)
-		if objectPathIsInvalid(path) {
-			continue
+func (b OracleCSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		request := objectstorage.ListObjectsRequest{
+			NamespaceName: &b.Namespace,
+			BucketName:    &b.Bucket,
+			Prefix:        &prefix,
 		}
 
-		var t time.Time
-		if attrs.TimeCreated != nil {
-			t = (*attrs.TimeCreated).Time
+		rc, err := b.Client.ListObjects(b.Context, request)
+		if err != nil {
+			ch <- Item{nil, err}
+			close(ch)
+			return
 		}
 
-		object := Object{
-			Path:         path,
-			Content:      []byte{},
-			LastModified: t,
+		for i := 0; i < len(rc.ListObjects.Objects); i++ {
+			attrs := rc.ListObjects.Objects[i]
+
+			path := removePrefixFromObjectPath(prefix, *attrs.Name)
+			var t time.Time
+			if attrs.TimeCreated != nil {
+				t = (*attrs.TimeCreated).Time
+			}
+			ch <- Item{
+				&Object{
+					Path:         path,
+					Content:      []byte{},
+					LastModified: t,
+				}, nil }
 		}
-		objects = append(objects, object)
-	}
-	return objects, nil
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from OCI Object Storage bucket, at prefix

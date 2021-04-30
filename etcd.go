@@ -100,41 +100,50 @@ func (e *etcdStorage) delTimeStamp(path string) error {
 	return err
 }
 
-//
-func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
-	var (
-		objs []Object
-	)
-	ctx, cancel := context.WithTimeout(e.ctx, e.opts.dialtimeout)
-	newpath := pathutil.Join(e.base, prefix)
-	resps, err := e.c.Get(ctx, newpath, clientv3.WithPrefix())
-	cancel()
-	if err != nil {
-		return nil, err
-	}
-	for _, kv := range resps.Kvs {
-		if kv.Value != nil {
-			path := removePrefixFromObjectPath(newpath, string(kv.Key))
-			if objectPathIsInvalid(path) {
-				continue
-			}
-			//TODO need optimizate
-			if strings.HasSuffix(path, TimeStampKey) {
-				continue
-			}
-			modtime := e.timeStamp(newpath)
-			if modtime.IsZero() {
-				modtime = time.Unix(kv.ModRevision, 0)
-			}
-			objs = append(objs, Object{
-				Path:         path,
-				Content:      kv.Value,
-				LastModified: modtime,
-			})
-		}
-	}
-	return objs, nil
+// ListObjects lists all objects in etcd store, at prefix
+func (b etcdStorage) ListObjects(prefix string) ([]Object, error) {
+	return getObjects(b, prefix)
+}
 
+// ListFolders lists all folders in etcd store, at prefix
+func (b etcdStorage) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
+
+func (e etcdStorage) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		ctx, cancel := context.WithTimeout(e.ctx, e.opts.dialtimeout)
+		newpath := pathutil.Join(e.base, prefix)
+		resps, err := e.c.Get(ctx, newpath, clientv3.WithPrefix())
+		cancel()
+		if err != nil {
+			ch <- Item{nil, err}
+			close(ch)
+			return
+		}
+		for _, kv := range resps.Kvs {
+			if kv.Value != nil {
+				path := removePrefixFromObjectPath(newpath, string(kv.Key))
+				//TODO need optimizate
+				if strings.HasSuffix(path, TimeStampKey) {
+					continue
+				}
+				modtime := e.timeStamp(newpath)
+				if modtime.IsZero() {
+					modtime = time.Unix(kv.ModRevision, 0)
+				}
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      kv.Value,
+						LastModified: modtime,
+					}, nil }
+			}
+		}
+		close(ch)
+	} ()
+	return ch
 }
 
 func (e *etcdStorage) GetObject(path string) (Object, error) {
@@ -249,5 +258,4 @@ func NewEtcdCSBackend(endpoints string, cafile, certfile, keyfile string, prefix
 		panic(err)
 	}
 	return e
-
 }

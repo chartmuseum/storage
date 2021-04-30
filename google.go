@@ -51,32 +51,43 @@ func NewGoogleCSBackend(bucket string, prefix string) *GoogleCSBackend {
 
 // ListObjects lists all objects in Google Cloud Storage bucket, at prefix
 func (b GoogleCSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
-	listQuery := &storage.Query{
-		Prefix: prefix,
-	}
-	it := b.Client.Objects(b.Context, listQuery)
-	for {
-		attrs, err := it.Next()
-		if err == iterator.Done {
-			break
+	return getObjects(b, prefix)
+}
+
+// ListFolders lists all folders in Google Cloud Storage bucket, at prefix
+func (b GoogleCSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
+
+func (b GoogleCSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		listQuery := &storage.Query{
+			Prefix: prefix,
 		}
-		if err != nil {
-			return objects, err
+		it := b.Client.Objects(b.Context, listQuery)
+		for {
+			attrs, err := it.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				ch <- Item{nil, err}
+				close(ch)
+				return
+			}
+			path := removePrefixFromObjectPath(prefix, attrs.Name)
+			ch <- Item{
+				&Object{
+					Path:         path,
+					Content:      []byte{},
+					LastModified: attrs.Updated,
+				}, nil }
 		}
-		path := removePrefixFromObjectPath(prefix, attrs.Name)
-		if objectPathIsInvalid(path) {
-			continue
-		}
-		object := Object{
-			Path:         path,
-			Content:      []byte{},
-			LastModified: attrs.Updated,
-		}
-		objects = append(objects, object)
-	}
-	return objects, nil
+		close(ch)
+	} ();
+	return ch
 }
 
 // GetObject retrieves an object from Google Cloud Storage bucket, at prefix

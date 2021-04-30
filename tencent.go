@@ -83,48 +83,52 @@ func NewTencentCloudCOSBackend(bucket string, prefix string, endpoint string) *T
 }
 
 // ListObjects lists all objects in Tencent Cloud COS bucket, at prefix
-func (t TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
+func (b TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
+	return getObjects(b, prefix)
+}
 
-	var objects []Object
+// ListFolders lists all folders in Tencent Cloud COS bucket, at prefix
+func (b TencentCloudCOSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-	prefix = pathutil.Join(t.Prefix, prefix)
-	cosPrefix := prefix
-	cosMarker := ""
-
-	for {
-		opt := &cos.BucketGetOptions{
-			Prefix:  cosPrefix,
-			MaxKeys: 100,
-			Marker:  cosMarker,
-		}
-		bucketGetResult, _, err := t.Bucket.Get(context.Background(), opt)
-		if err != nil {
-			return objects, err
-		}
-
-		for _, obj := range bucketGetResult.Contents {
-			path := removePrefixFromObjectPath(prefix, obj.Key)
-			if objectPathIsInvalid(path) {
-				continue
+func (t TencentCloudCOSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(t.Prefix, prefix)
+		cosPrefix := prefix
+		cosMarker := ""
+		for {
+			opt := &cos.BucketGetOptions{
+				Prefix:  cosPrefix,
+				MaxKeys: 100,
+				Marker:  cosMarker,
 			}
-			lastModified, _ := time.Parse(time.RFC3339, obj.LastModified)
-			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: lastModified,
+			bucketGetResult, _, err := t.Bucket.Get(context.Background(), opt)
+			if err != nil {
+				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
-			objects = append(objects, object)
+			for _, obj := range bucketGetResult.Contents {
+				path := removePrefixFromObjectPath(prefix, obj.Key)
+				lastModified, _ := time.Parse(time.RFC3339, obj.LastModified)
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      []byte{},
+						LastModified: lastModified,
+					}, nil }
+			}
+			if !bucketGetResult.IsTruncated {
+				break
+			}
+			cosPrefix = bucketGetResult.Prefix
+			cosMarker = bucketGetResult.NextMarker
 		}
-
-		if !bucketGetResult.IsTruncated {
-			break
-		}
-
-		cosPrefix = bucketGetResult.Prefix
-		cosMarker = bucketGetResult.NextMarker
-	}
-
-	return objects, nil
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from Tencent Cloud COS bucket, at prefix

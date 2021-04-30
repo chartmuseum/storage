@@ -44,12 +44,19 @@ func (suite *AmazonTestSuite) SetupSuite() {
 
 	data := []byte("some object")
 	path := "deleteme.txt"
+	dirFilePath := "testdir/deleteme.txt"
 
 	err := suite.NoPrefixAmazonS3Backend.PutObject(path, data)
 	suite.Nil(err, "no error putting deleteme.txt using AmazonS3 backend")
 
 	err = suite.SSEAmazonS3Backend.PutObject(path, data)
 	suite.Nil(err, "no error putting deleteme.txt using AmazonS3 backend (SSE)")
+
+	err = suite.NoPrefixAmazonS3Backend.PutObject(dirFilePath, data)
+	suite.Nil(err, "no error putting testdir/deleteme.txt using AmazonS3 backend")
+
+	err = suite.SSEAmazonS3Backend.PutObject(dirFilePath, data)
+	suite.Nil(err, "no error putting testdir/deleteme.txt using AmazonS3 backend (SSE)")
 }
 
 func (suite *AmazonTestSuite) TearDownSuite() {
@@ -58,17 +65,38 @@ func (suite *AmazonTestSuite) TearDownSuite() {
 
 	err = suite.SSEAmazonS3Backend.DeleteObject("deleteme.txt")
 	suite.Nil(err, "no error deleting deleteme.txt using AmazonS3 backend")
+
+	err = suite.NoPrefixAmazonS3Backend.DeleteObject("testdir/deleteme.txt")
+	suite.Nil(err, "no error deleting testdir/deleteme.txt using AmazonS3 backend")
+
+	err = suite.SSEAmazonS3Backend.DeleteObject("testdir/deleteme.txt")
+	suite.Nil(err, "no error deleting testdir/deleteme.txt using AmazonS3 backend")
 }
 
 func (suite *AmazonTestSuite) TestListObjects() {
 	_, err := suite.BrokenAmazonS3Backend.ListObjects("")
 	suite.NotNil(err, "cannot list objects with bad bucket")
 
-	_, err = suite.NoPrefixAmazonS3Backend.ListObjects("")
+	objs, err := suite.NoPrefixAmazonS3Backend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, no prefix")
+	suite.Equal(len(objs), 1, "able to list objects")
 
-	_, err = suite.SSEAmazonS3Backend.ListObjects("")
+	objs, err = suite.SSEAmazonS3Backend.ListObjects("")
 	suite.Nil(err, "can list objects with good bucket, SSE")
+	suite.Equal(len(objs), 1, "able to list objects")
+}
+
+func (suite *AmazonTestSuite) TestListFolders() {
+	_, err := suite.BrokenAmazonS3Backend.ListFolders("")
+	suite.NotNil(err, "cannot list folders with bad bucket")
+
+	folders, err := suite.NoPrefixAmazonS3Backend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, no prefix")
+	suite.Equal(len(folders), 1, "able to list folders")
+
+	folders, err = suite.SSEAmazonS3Backend.ListFolders("")
+	suite.Nil(err, "can list folders with good bucket, SSE")
+	suite.Equal(len(folders), 1, "able to list folders")
 }
 
 func (suite *AmazonTestSuite) TestGetObject() {

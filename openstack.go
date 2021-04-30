@@ -222,47 +222,54 @@ func NewOpenstackOSBackendV1Auth(container string, prefix string, caCert string)
 
 // ListObjects lists all objects in an Openstack container, at prefix
 func (b OpenstackOSBackend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
+	return getObjects(b, prefix)
+}
 
-	prefix = pathutil.Join(b.Prefix, prefix)
-	opts := &osObjects.ListOpts{
-		Full:   true,
-		Prefix: prefix,
-	}
+// ListFolders lists all folders in an Openstack container, at prefix
+func (b OpenstackOSBackend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
 
-	pager := osObjects.List(b.Client, b.Container, opts)
-	err := pager.EachPage(func(page pagination.Page) (bool, error) {
-		objectList, err := osObjects.ExtractInfo(page)
+func (b OpenstackOSBackend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		opts := &osObjects.ListOpts{
+			Full:   true,
+			Prefix: prefix,
+		}
+
+		pager := osObjects.List(b.Client, b.Container, opts)
+		err := pager.EachPage(func(page pagination.Page) (bool, error) {
+			objectList, err := osObjects.ExtractInfo(page)
+			if err != nil {
+				return false, err
+			}
+			for _, openStackObject := range objectList {
+				path := removePrefixFromObjectPath(prefix, openStackObject.Name)
+				// This is a patch so that LastModified match between the List and GetObject function
+				// Openstack seems to send a rounded up time when getting the LastModified date from an object show versus an object list
+				var lastModified time.Time
+				if openStackObject.LastModified.Nanosecond()/int(time.Microsecond) == 0 {
+					lastModified = openStackObject.LastModified
+				} else {
+					lastModified = openStackObject.LastModified.Truncate(time.Second).Add(time.Second)
+				}
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      []byte{},
+						LastModified: lastModified,
+					}, nil }
+			}
+			return true, nil
+		})
 		if err != nil {
-			return false, err
+			ch <- Item{nil, err}
 		}
-
-		for _, openStackObject := range objectList {
-			path := removePrefixFromObjectPath(prefix, openStackObject.Name)
-			if objectPathIsInvalid(path) {
-				continue
-			}
-
-			// This is a patch so that LastModified match between the List and GetObject function
-			// Openstack seems to send a rounded up time when getting the LastModified date from an object show versus an object list
-			var lastModified time.Time
-			if openStackObject.LastModified.Nanosecond()/int(time.Microsecond) == 0 {
-				lastModified = openStackObject.LastModified
-			} else {
-				lastModified = openStackObject.LastModified.Truncate(time.Second).Add(time.Second)
-			}
-
-			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: lastModified,
-			}
-			objects = append(objects, object)
-		}
-		return true, nil
-	})
-
-	return objects, err
+		close(ch)
+	}()
+	return ch
 }
 
 // GetObject retrieves an object from an Openstack container, at prefix

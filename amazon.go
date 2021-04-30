@@ -80,35 +80,46 @@ func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region stri
 
 // ListObjects lists all objects in Amazon S3 bucket, at prefix
 func (b AmazonS3Backend) ListObjects(prefix string) ([]Object, error) {
-	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
-	s3Input := &s3.ListObjectsInput{
-		Bucket: aws.String(b.Bucket),
-		Prefix: aws.String(prefix),
-	}
-	for {
-		s3Result, err := b.Client.ListObjects(s3Input)
-		if err != nil {
-			return objects, err
+	return getObjects(b, prefix)
+}
+
+// ListFolders lists all folders in Amazon S3 bucket, at prefix
+func (b AmazonS3Backend) ListFolders(prefix string) ([]Folder, error) {
+	return getFolders(b, prefix)
+}
+
+func (b AmazonS3Backend) ObjectIter(prefix string) <-chan Item {
+	ch := make(chan(Item))
+	go func() {
+		prefix = pathutil.Join(b.Prefix, prefix)
+		s3Input := &s3.ListObjectsInput{
+			Bucket: aws.String(b.Bucket),
+			Prefix: aws.String(prefix),
 		}
-		for _, obj := range s3Result.Contents {
-			path := removePrefixFromObjectPath(prefix, *obj.Key)
-			if objectPathIsInvalid(path) {
-				continue
+		for {
+			s3Result, err := b.Client.ListObjects(s3Input)
+			if err != nil {
+				ch <- Item{nil, err}
+				close(ch)
+				return
 			}
-			object := Object{
-				Path:         path,
-				Content:      []byte{},
-				LastModified: *obj.LastModified,
+			for _, obj := range s3Result.Contents {
+				path := removePrefixFromObjectPath(prefix, *obj.Key)
+				ch <- Item{
+					&Object{
+						Path:         path,
+						Content:      []byte{},
+						LastModified: *obj.LastModified,
+					}, nil }
 			}
-			objects = append(objects, object)
+			if !*s3Result.IsTruncated {
+				break
+			}
+			s3Input.Marker = s3Result.Contents[len(s3Result.Contents)-1].Key
 		}
-		if !*s3Result.IsTruncated {
-			break
-		}
-		s3Input.Marker = s3Result.Contents[len(s3Result.Contents)-1].Key
-	}
-	return objects, nil
+		close(ch)
+	} ()
+	return ch
 }
 
 // GetObject retrieves an object from Amazon S3 bucket, at prefix
