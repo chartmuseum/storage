@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	pathutil "path"
 	"strings"
-    "net/http"
+	"net/http"
 	"crypto/tls"
 	"os"
 	"github.com/aws/aws-sdk-go/aws"
