@@ -15,7 +15,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-00010101000000-000000000000
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.8+incompatible
-	github.com/aws/aws-sdk-go v1.38.26
+	github.com/aws/aws-sdk-go v1.40.1
 	github.com/baidubce/bce-sdk-go v0.9.64
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/dnaeon/go-vcr v1.1.0 // indirect
@@ -25,6 +25,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.24
 	go.etcd.io/etcd v0.0.0-00010101000000-000000000000
-	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	google.golang.org/api v0.45.0
 )
