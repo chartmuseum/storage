@@ -19,7 +19,7 @@ require (
 	github.com/baidubce/bce-sdk-go v0.9.64
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/dnaeon/go-vcr v1.1.0 // indirect
-	github.com/gophercloud/gophercloud v0.17.0
+	github.com/gophercloud/gophercloud v0.19.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
