@@ -19,6 +19,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -90,6 +91,9 @@ func (t TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
 	prefix = pathutil.Join(t.Prefix, prefix)
 	cosPrefix := prefix
 	cosMarker := ""
+	if cosPrefix != "" {
+		cosPrefix = fmt.Sprintf("%s/", cosPrefix)
+	}
 
 	for {
 		opt := &cos.BucketGetOptions{
