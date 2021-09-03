@@ -21,7 +21,9 @@ import (
 	"io/ioutil"
 	pathutil "path"
 	"strings"
-
+	"net/http"
+	"crypto/tls"
+	"os"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -41,7 +43,15 @@ type AmazonS3Backend struct {
 
 // NewAmazonS3Backend creates a new instance of AmazonS3Backend
 func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint string, sse string) *AmazonS3Backend {
+	client := http.DefaultClient
+	if os.Getenv("AWS_INSECURE_SKIP_VERIFY") == "true" {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
 	service := s3.New(session.New(), &aws.Config{
+		HTTPClient:       client,
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(strings.HasPrefix(endpoint, "http://")),
@@ -60,7 +70,15 @@ func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint st
 
 // NewAmazonS3BackendWithCredentials creates a new instance of AmazonS3Backend with credentials
 func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region string, endpoint string, sse string, credentials *credentials.Credentials) *AmazonS3Backend {
+	client := http.DefaultClient
+	if os.Getenv("AWS_INSECURE_SKIP_VERIFY") == "true" {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
 	service := s3.New(session.New(), &aws.Config{
+		HTTPClient:       client,
 		Credentials:      credentials,
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
