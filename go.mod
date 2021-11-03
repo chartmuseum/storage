@@ -18,7 +18,7 @@ require (
 	github.com/gophercloud/gophercloud v0.20.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/stretchr/testify v1.7.0
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.30
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.32
 	go.etcd.io/etcd v0.0.0-00010101000000-000000000000
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
 	google.golang.org/api v0.56.0
