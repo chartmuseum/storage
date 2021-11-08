@@ -13,7 +13,7 @@ require (
 	github.com/Azure/azure-sdk-for-go v57.1.0+incompatible
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-00010101000000-000000000000
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.10+incompatible
-	github.com/aws/aws-sdk-go v1.40.37
+	github.com/aws/aws-sdk-go v1.41.19
 	github.com/baidubce/bce-sdk-go v0.9.86
 	github.com/gophercloud/gophercloud v0.20.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
