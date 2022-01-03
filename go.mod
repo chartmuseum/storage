@@ -10,7 +10,7 @@ replace (
 
 require (
 	cloud.google.com/go/storage v1.16.1
-	github.com/Azure/azure-sdk-for-go v57.1.0+incompatible
+	github.com/Azure/azure-sdk-for-go v61.0.0+incompatible
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-00010101000000-000000000000
 	github.com/aliyun/aliyun-oss-go-sdk v2.1.10+incompatible
 	github.com/aws/aws-sdk-go v1.40.37
