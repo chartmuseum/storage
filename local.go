@@ -44,7 +44,7 @@ func (b LocalFilesystemBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 	files, err := ioutil.ReadDir(pathutil.Join(b.RootDirectory, prefix))
 	if err != nil {
-		if os.IsNotExist(err) {  // OK if the directory doesnt exist yet
+		if os.IsNotExist(err) { // OK if the directory doesnt exist yet
 			err = nil
 		}
 		return objects, err
@@ -84,7 +84,14 @@ func (b LocalFilesystemBackend) PutObject(path string, content []byte) error {
 	_, err := os.Stat(folderPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := os.MkdirAll(folderPath, 0777)
+			err := os.MkdirAll(folderPath, 0774)
+			if err != nil {
+				return err
+			}
+			// os.MkdirAll set the dir permissions before the umask
+			// we need to use os.Chmod to ensure the permissions of the created directory are 774
+			// because the default umask will prevent that and cause the permissions to be 755
+			err = os.Chmod(folderPath, 0774)
 			if err != nil {
 				return err
 			}
