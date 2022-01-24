@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout source code
-        uses: actions/checkout@master
+        uses: actions/checkout@main
       - name: setup go environment
         uses: actions/setup-go@v1
         with:
-          go-version: '1.15.4'
+          go-version: '1.17.6'
       - name: run tests
         run: make test
       - name: upload coverage report
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@main
         with:
           name: chartmuseum-storage-coverage-report-${{ github.sha }}
           path: coverage.html
