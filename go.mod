@@ -11,7 +11,7 @@ require (
 	github.com/baidubce/bce-sdk-go v0.9.105
 	github.com/gophercloud/gophercloud v0.24.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.33
 	go.etcd.io/etcd v3.3.27+incompatible
 	go.etcd.io/etcd/client/v3 v3.5.2
