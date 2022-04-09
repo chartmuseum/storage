@@ -17,11 +17,15 @@ limitations under the License.
 package storage
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 
 	pathutil "path"
 	"path/filepath"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 // LocalFilesystemBackend is a storage backend for local filesystem storage
@@ -29,14 +33,79 @@ type LocalFilesystemBackend struct {
 	RootDirectory string
 }
 
+type NewLocalFilesystemBackendOption struct {
+	notifier map[EventType]func()
+}
+
+var watcherOnce sync.Once
+var globalWatcher *fsnotify.Watcher
+
+func WithEventNotifier(e EventType, fn func()) func(*NewLocalFilesystemBackendOption) {
+	return func(option *NewLocalFilesystemBackendOption) {
+		if option.notifier == nil {
+			option.notifier = make(map[EventType]func())
+		}
+		option.notifier[e] = fn
+	}
+}
+
 // NewLocalFilesystemBackend creates a new instance of LocalFilesystemBackend
-func NewLocalFilesystemBackend(rootDirectory string) *LocalFilesystemBackend {
+func NewLocalFilesystemBackend(rootDirectory string, opts ...func(*NewLocalFilesystemBackendOption)) *LocalFilesystemBackend {
+	var option NewLocalFilesystemBackendOption
+	for _, opt := range opts {
+		opt(&option)
+	}
 	absPath, err := filepath.Abs(rootDirectory)
 	if err != nil {
 		panic(err)
 	}
-	b := &LocalFilesystemBackend{RootDirectory: absPath}
+	b := &LocalFilesystemBackend{
+		RootDirectory: absPath,
+	}
+
+	watcherOnce.Do(func() {
+		globalWatcher, err = fsnotify.NewWatcher()
+		if err != nil {
+			panic(err)
+		}
+		// since it is a longTerm watcher , we do not need to close it
+		go func() {
+			for {
+				select {
+				case event, ok := <-globalWatcher.Events:
+					if !ok {
+						continue
+					}
+
+					switch event.Op {
+					case fsnotify.Write, fsnotify.Create:
+						if fn, ok := option.notifier[EventPutObject]; ok {
+							fn()
+						}
+					case fsnotify.Remove:
+						if fn, ok := option.notifier[EventDeleteObject]; ok {
+							fn()
+						}
+					}
+				case _, ok := <-globalWatcher.Errors:
+					if !ok {
+						continue
+					}
+				}
+			}
+		}()
+
+		if err := globalWatcher.Add(b.RootDirectory); err != nil {
+			panic(err)
+		}
+	})
+
 	return b
+}
+
+func (b LocalFilesystemBackend) AddWatcherPath(path string) error {
+	// TODO: to ensure that we should lock here ?
+	return globalWatcher.Add(path)
 }
 
 // ListObjects lists all objects in root directory (depth 1)
@@ -84,6 +153,7 @@ func (b LocalFilesystemBackend) PutObject(path string, content []byte) error {
 	_, err := os.Stat(folderPath)
 	if err != nil {
 		if os.IsNotExist(err) {
+			// NOTE: works for dynamic depth tenant
 			err := os.MkdirAll(folderPath, 0774)
 			if err != nil {
 				return err
@@ -95,17 +165,25 @@ func (b LocalFilesystemBackend) PutObject(path string, content []byte) error {
 			if err != nil {
 				return err
 			}
+			// also adds the fsnotify watcher path
+			if err := b.AddWatcherPath(folderPath); err != nil {
+				return err
+			}
 		} else {
 			return err
 		}
 	}
-	err = ioutil.WriteFile(fullpath, content, 0644)
-	return err
+	if err = ioutil.WriteFile(fullpath, content, 0644); err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeleteObject removes an object from root directory
 func (b LocalFilesystemBackend) DeleteObject(path string) error {
 	fullpath := pathutil.Join(b.RootDirectory, path)
-	err := os.Remove(fullpath)
-	return err
+	if err := os.Remove(fullpath); err != nil {
+		return fmt.Errorf("failed to delete object %s: %w", path, err)
+	}
+	return nil
 }
