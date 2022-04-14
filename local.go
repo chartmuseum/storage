@@ -27,6 +27,7 @@ import (
 // LocalFilesystemBackend is a storage backend for local filesystem storage
 type LocalFilesystemBackend struct {
 	RootDirectory string
+	TempDirectory string
 }
 
 // NewLocalFilesystemBackend creates a new instance of LocalFilesystemBackend
@@ -35,7 +36,20 @@ func NewLocalFilesystemBackend(rootDirectory string) *LocalFilesystemBackend {
 	if err != nil {
 		panic(err)
 	}
-	b := &LocalFilesystemBackend{RootDirectory: absPath}
+	// Create a temporary folder for partially-completed writes (if not present)
+	tempPath := filepath.Join(absPath, ".tmp")
+	_, err = os.Stat(tempPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(tempPath, 0774)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+	}
+	b := &LocalFilesystemBackend{RootDirectory: absPath, TempDirectory: tempPath}
 	return b
 }
 
@@ -99,7 +113,27 @@ func (b LocalFilesystemBackend) PutObject(path string, content []byte) error {
 			return err
 		}
 	}
-	err = ioutil.WriteFile(fullpath, content, 0644)
+
+	// Write to a temporary file first
+	tempFile, err := os.CreateTemp(b.TempDirectory, "partial-upload-")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tempFile.Name())
+	_, err = tempFile.Write(content)
+	if err != nil {
+		return err
+	}
+	tempFile.Close()
+
+	// Default permissions on a temp file are 600, so let's change that
+	err = os.Chmod(tempFile.Name(), 0774)
+	if err != nil {
+		return err
+	}
+
+	// Now that the file is written safely, atomically move it into place
+	err = os.Rename(tempFile.Name(), fullpath)
 	return err
 }
 
