@@ -19,6 +19,7 @@ package storage
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -33,7 +34,7 @@ type StorageTestSuite struct {
 
 func (suite *StorageTestSuite) setupStorageBackends() {
 	timestamp := time.Now().Format("20060102150405")
-	suite.TempDirectory = fmt.Sprintf("../../.test/storage-storage/%s", timestamp)
+	suite.TempDirectory = filepath.Join(".test", timestamp)
 	suite.StorageBackends = make(map[string]Backend)
 	suite.StorageBackends["LocalFilesystem"] = Backend(NewLocalFilesystemBackend(suite.TempDirectory))
 
