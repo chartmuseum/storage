@@ -15,8 +15,8 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.35
 	go.etcd.io/etcd v3.3.27+incompatible
 	go.etcd.io/etcd/client/v3 v3.5.4
-	golang.org/x/net v0.0.0-20220531201128-c960675eff93
-	google.golang.org/api v0.82.0
+	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
+	google.golang.org/api v0.83.0
 )
 
 require (
