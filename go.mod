@@ -8,7 +8,7 @@ require (
 	github.com/NetEase-Object-Storage/nos-golang-sdk v0.0.0-20191125093154-335c2b73bf6b
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aws/aws-sdk-go v1.44.27
-	github.com/baidubce/bce-sdk-go v0.9.123
+	github.com/baidubce/bce-sdk-go v0.9.135
 	github.com/gophercloud/gophercloud v0.25.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/stretchr/testify v1.7.1
