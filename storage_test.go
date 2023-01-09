@@ -38,7 +38,7 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 	suite.StorageBackends["LocalFilesystem"] = Backend(NewLocalFilesystemBackend(suite.TempDirectory))
 
 	// create empty dir in local storage to make sure it doesnt end up in ListObjects
-	err := os.MkdirAll(fmt.Sprintf("%s/%s", suite.TempDirectory, "ignoreme"), 0777)
+	err := os.MkdirAll(fmt.Sprintf("%s/%s", suite.TempDirectory, "ignoreme"), 0o777)
 	suite.Nil(err, "No error creating ignored dir in local storage")
 
 	if os.Getenv("TEST_CLOUD_STORAGE") == "1" {
@@ -58,8 +58,6 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		bosEndpoint := os.Getenv("TEST_STORAGE_BAIDU_ENDPOINT")
 		cosBucket := os.Getenv("TEST_STORAGE_TENCENT_BUCKET")
 		cosEndpoint := os.Getenv("TEST_STORAGE_TENCENT_ENDPOINT")
-		nosBucket := os.Getenv("TEST_STORAGE_NETEASE_BUCKET")
-		nosEndpoint := os.Getenv("TEST_STORAGE_NETEASE_ENDPOINT")
 		if s3Bucket != "" && s3Region != "" {
 			suite.StorageBackends["AmazonS3"] = Backend(NewAmazonS3Backend(s3Bucket, prefix, s3Region, "", ""))
 		}
@@ -83,9 +81,6 @@ func (suite *StorageTestSuite) setupStorageBackends() {
 		}
 		if cosBucket != "" {
 			suite.StorageBackends["TencentCloudCOS"] = Backend(NewTencentCloudCOSBackend(cosBucket, prefix, cosEndpoint))
-		}
-		if nosBucket != "" {
-			suite.StorageBackends["NeteaseCloudNOS"] = Backend(NewNeteaseNOSBackend(nosBucket, prefix, nosEndpoint))
 		}
 	}
 }
@@ -238,7 +233,6 @@ func (suite *StorageTestSuite) TestGetObjectSliceDiff() {
 	suite.Empty(diff.Removed, "removed slice empty")
 	suite.Equal(diff.Added, []Object{os2[1]}, "added slice empty")
 	suite.Empty(diff.Updated, "updated slice empty")
-
 }
 
 func TestStorageTestSuite(t *testing.T) {
