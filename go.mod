@@ -7,7 +7,7 @@ require (
 	github.com/Azure/azure-sdk-for-go v65.0.0+incompatible
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aws/aws-sdk-go v1.44.27
-	github.com/baidubce/bce-sdk-go v0.9.123
+	github.com/baidubce/bce-sdk-go v0.9.141
 	github.com/gophercloud/gophercloud v0.25.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/stretchr/testify v1.7.1
