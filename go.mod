@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	cloud.google.com/go/storage v1.22.1
-	github.com/Azure/azure-sdk-for-go v65.0.0+incompatible
+	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aws/aws-sdk-go v1.44.27
 	github.com/baidubce/bce-sdk-go v0.9.123
