@@ -17,11 +17,11 @@ limitations under the License.
 package storage
 
 import (
+	"context"
 	"io/ioutil"
 	pathutil "path"
 
 	"cloud.google.com/go/storage"
-	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 )
 
