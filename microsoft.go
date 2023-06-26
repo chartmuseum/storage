@@ -165,7 +165,7 @@ func (b MicrosoftBlobBackend) PutObject(path string, content []byte) error {
 	return err
 }
 
-func writeToBlob(context []byte, blobRef *microsoft_storage.Blob) error {
+func writeToBlob(content []byte, blobRef *microsoft_storage.Blob) error {
 	for offset := 0; offset < len(context); offset += maxChunkSize {
 		chunkSize := maxChunkSize
 		if offset+chunkSize > len(context) {
