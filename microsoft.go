@@ -166,12 +166,12 @@ func (b MicrosoftBlobBackend) PutObject(path string, content []byte) error {
 }
 
 func writeToBlob(content []byte, blobRef *microsoft_storage.Blob) error {
-	for offset := 0; offset < len(context); offset += maxChunkSize {
+	for offset := 0; offset < len(content); offset += maxChunkSize {
 		chunkSize := maxChunkSize
-		if offset+chunkSize > len(context) {
-			chunkSize = len(context) - offset
+		if offset+chunkSize > len(content) {
+			chunkSize = len(content) - offset
 		}
-		if err := blobRef.AppendBlock(context[offset:offset+chunkSize], nil); err != nil {
+		if err := blobRef.AppendBlock(content[offset:offset+chunkSize], nil); err != nil {
 			return err
 		}
 	}
