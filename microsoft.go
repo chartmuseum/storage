@@ -27,6 +27,10 @@ import (
 	microsoft_storage "github.com/Azure/azure-sdk-for-go/storage"
 )
 
+const (
+	maxChunkSize = 4 * 1024 * 1024
+)
+
 // MicrosoftBlobBackend is a storage backend for Microsoft Azure Blob Storage
 type MicrosoftBlobBackend struct {
 	Prefix    string
@@ -155,10 +159,23 @@ func (b MicrosoftBlobBackend) PutObject(path string, content []byte) error {
 
 	err := blobReference.PutAppendBlob(nil)
 	if err == nil {
-		err = blobReference.AppendBlock(content, nil)
+		err = writeToBlob(content, blobReference)
 	}
 
 	return err
+}
+
+func writeToBlob(content []byte, blobRef *microsoft_storage.Blob) error {
+	for offset := 0; offset < len(content); offset += maxChunkSize {
+		chunkSize := maxChunkSize
+		if offset+chunkSize > len(content) {
+			chunkSize = len(content) - offset
+		}
+		if err := blobRef.AppendBlock(content[offset:offset+chunkSize], nil); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // DeleteObject removes an object from Microsoft Azure Blob Storage container, at path

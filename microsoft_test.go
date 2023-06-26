@@ -89,6 +89,17 @@ func (suite *MicrosoftTestSuite) TestPutObject() {
 	suite.NotNil(err, "cannot put objects with bad bucket")
 }
 
+func (suite *MicrosoftTestSuite) TestPutObjectGreaterThan4MB() {
+	data := make([]byte, 2*maxChunkSize)
+	for i := 0; i < 2*maxChunkSize; i++ {
+		data[i] = byte(i)
+	}
+	err := suite.NoPrefixAzureBlobBackend.PutObject("this-file-created-for-test.txt", data)
+	suite.Nil(err, "can put objects with good bucket, no prefix")
+	// clean up
+	suite.NoPrefixAzureBlobBackend.DeleteObject("this-file-created-for-test.txt")
+}
+
 func TestAzureStorageTestSuite(t *testing.T) {
 	if os.Getenv("TEST_CLOUD_STORAGE") == "1" &&
 		os.Getenv("TEST_STORAGE_AZURE_CONTAINER") != "" {
