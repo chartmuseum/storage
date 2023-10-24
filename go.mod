@@ -1,4 +1,4 @@
-module github.com/chartmuseum/storage
+module github.com/warjiang/storage
 
 go 1.17
 

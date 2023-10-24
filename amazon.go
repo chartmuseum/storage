@@ -18,17 +18,17 @@ package storage
 
 import (
 	"bytes"
-	"io/ioutil"
-	pathutil "path"
-	"strings"
-	"net/http"
 	"crypto/tls"
-	"os"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"io/ioutil"
+	"net/http"
+	"os"
+	pathutil "path"
+	"strings"
 )
 
 // AmazonS3Backend is a storage backend for Amazon S3
@@ -56,6 +56,40 @@ func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint st
 		Endpoint:         aws.String(endpoint),
 		DisableSSL:       aws.Bool(strings.HasPrefix(endpoint, "http://")),
 		S3ForcePathStyle: aws.Bool(endpoint != ""),
+	})
+	b := &AmazonS3Backend{
+		Bucket:     bucket,
+		Client:     service,
+		Downloader: s3manager.NewDownloaderWithClient(service),
+		Prefix:     cleanPrefix(prefix),
+		Uploader:   s3manager.NewUploaderWithClient(service),
+		SSE:        sse,
+	}
+	return b
+}
+
+type AmazonS3Options struct {
+	S3ForcePathStyle *bool
+}
+
+func NewAmazonS3BackendWithOptions(bucket string, prefix string, region string, endpoint string, sse string, options *AmazonS3Options) *AmazonS3Backend {
+	client := http.DefaultClient
+	if os.Getenv("AWS_INSECURE_SKIP_VERIFY") == "true" {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
+	s3ForcePathStyle := endpoint != ""
+	if options.S3ForcePathStyle != nil {
+		s3ForcePathStyle = *options.S3ForcePathStyle
+	}
+	service := s3.New(session.New(), &aws.Config{
+		HTTPClient:       client,
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		DisableSSL:       aws.Bool(strings.HasPrefix(endpoint, "http://")),
+		S3ForcePathStyle: aws.Bool(s3ForcePathStyle),
 	})
 	b := &AmazonS3Backend{
 		Bucket:     bucket,
