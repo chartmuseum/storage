@@ -18,17 +18,17 @@ package storage
 
 import (
 	"bytes"
+	"io/ioutil"
+	pathutil "path"
+	"strings"
+	"net/http"
 	"crypto/tls"
+	"os"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"io/ioutil"
-	"net/http"
-	"os"
-	pathutil "path"
-	"strings"
 )
 
 // AmazonS3Backend is a storage backend for Amazon S3
