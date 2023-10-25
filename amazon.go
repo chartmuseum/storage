@@ -81,7 +81,7 @@ func NewAmazonS3BackendWithOptions(bucket string, prefix string, region string, 
 		client = &http.Client{Transport: tr}
 	}
 	s3ForcePathStyle := endpoint != ""
-	if options.S3ForcePathStyle != nil {
+	if options != nil && options.S3ForcePathStyle != nil {
 		s3ForcePathStyle = *options.S3ForcePathStyle
 	}
 	service := s3.New(session.New(), &aws.Config{
