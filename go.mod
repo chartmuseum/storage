@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/storage v1.22.1
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
-	github.com/aws/aws-sdk-go v1.44.288
+	github.com/aws/aws-sdk-go v1.47.11
 	github.com/baidubce/bce-sdk-go v0.9.123
 	github.com/gophercloud/gophercloud v0.25.0
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
@@ -55,11 +55,11 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	google.golang.org/appengine v1.6.7 // indirect
