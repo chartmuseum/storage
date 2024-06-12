@@ -17,8 +17,8 @@ limitations under the License.
 package storage
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -28,15 +28,16 @@ import (
 type LocalTestSuite struct {
 	suite.Suite
 	LocalFilesystemBackend *LocalFilesystemBackend
-	BrokenTempDirectory    string
+	TempRootDirectory      string
 }
 
 func (suite *LocalTestSuite) SetupSuite() {
 	timestamp := time.Now().Format("20060102150405")
-	suite.BrokenTempDirectory = fmt.Sprintf("../../.test/storage-local/%s-broken", timestamp)
-	defer os.RemoveAll(suite.BrokenTempDirectory)
-	backend := NewLocalFilesystemBackend(suite.BrokenTempDirectory)
+	suite.TempRootDirectory = filepath.Join(".test", timestamp)
+	backend := NewLocalFilesystemBackend(suite.TempRootDirectory)
 	suite.LocalFilesystemBackend = backend
+	_, err := os.Stat(filepath.Join(suite.LocalFilesystemBackend.TempDirectory))
+	suite.Nil(err, "should have created a .tmp/ directory for partial uploads")
 }
 
 func (suite *LocalTestSuite) TestListObjects() {
@@ -55,5 +56,7 @@ func (suite *LocalTestSuite) TestPutObjectWithNonExistentPath() {
 }
 
 func TestLocalStorageTestSuite(t *testing.T) {
-	suite.Run(t, new(LocalTestSuite))
+	ts := new(LocalTestSuite)
+	defer os.RemoveAll(ts.TempRootDirectory)
+	suite.Run(t, ts)
 }
