@@ -128,8 +128,7 @@ func getNamespace(ctx context.Context, c objectstorage.ObjectStorageClient) (str
 // ListObjects lists all objects in OCI Object Storage bucket, at prefix
 func (b OracleCSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 
 	request := objectstorage.ListObjectsRequest{
 		NamespaceName: &b.Namespace,

@@ -75,8 +75,7 @@ func NewAlibabaCloudOSSBackend(bucket string, prefix string, endpoint string, ss
 func (b AlibabaCloudOSSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	ossPrefix := oss.Prefix(prefix)
 	marker := oss.Marker("")
 	for {

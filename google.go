@@ -52,8 +52,7 @@ func NewGoogleCSBackend(bucket string, prefix string) *GoogleCSBackend {
 // ListObjects lists all objects in Google Cloud Storage bucket, at prefix
 func (b GoogleCSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	listQuery := &storage.Query{
 		Prefix: prefix,
 	}

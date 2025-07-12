@@ -68,8 +68,7 @@ func NewBaiDuBOSBackend(bucket string, prefix string, endpoint string) *BaiduBOS
 func (b BaiduBOSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	listObjectsArgs := &api.ListObjectsArgs{
 		Prefix:  prefix,
 		Marker:  "",

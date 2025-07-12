@@ -134,8 +134,7 @@ func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region stri
 // ListObjects lists all objects in Amazon S3 bucket, at prefix
 func (b AmazonS3Backend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	s3Input := &s3.ListObjectsInput{
 		Bucket: aws.String(b.Bucket),
 		Prefix: aws.String(prefix),

@@ -102,8 +102,7 @@ func (e *etcdStorage) delTimeStamp(path string) error {
 func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
 	var objs []Object
 	ctx, cancel := context.WithTimeout(e.ctx, e.opts.dialtimeout)
-	newpath := pathutil.Join(e.base, prefix)
-	newpath = normalizePath(newpath)
+	newpath := joinAndNormalizePrefix(e.base, prefix)
 	resps, err := e.c.Get(ctx, newpath, clientv3.WithPrefix())
 	cancel()
 	if err != nil {

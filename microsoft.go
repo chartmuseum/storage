@@ -76,8 +76,7 @@ func (b MicrosoftBlobBackend) ListObjects(prefix string) ([]Object, error) {
 	}
 
 	var params microsoft_storage.ListBlobsParameters
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	params.Prefix = prefix
 
 	for {

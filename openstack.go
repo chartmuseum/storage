@@ -224,8 +224,7 @@ func NewOpenstackOSBackendV1Auth(container string, prefix string, caCert string)
 func (b OpenstackOSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 
-	prefix = pathutil.Join(b.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	opts := &osObjects.ListOpts{
 		Full:   true,
 		Prefix: prefix,

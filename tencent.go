@@ -86,8 +86,7 @@ func NewTencentCloudCOSBackend(bucket string, prefix string, endpoint string) *T
 func (t TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 
-	prefix = pathutil.Join(t.Prefix, prefix)
-	prefix = normalizePath(prefix)
+	prefix = joinAndNormalizePrefix(t.Prefix, prefix)
 	cosPrefix := prefix
 	cosMarker := ""
 	if cosPrefix != "" {
