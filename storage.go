@@ -97,6 +97,14 @@ func cleanPrefix(prefix string) string {
 	return strings.Trim(prefix, "/")
 }
 
+// normalizePath ensures that the path ends with a slash
+func normalizePath(path string) string {
+	if path != "" && !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path
+}
+
 func removePrefixFromObjectPath(prefix string, path string) string {
 	if prefix == "" {
 		return path

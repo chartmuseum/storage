@@ -225,6 +225,7 @@ func (b OpenstackOSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 
 	prefix = pathutil.Join(b.Prefix, prefix)
+	prefix = normalizePath(prefix)
 	opts := &osObjects.ListOpts{
 		Full:   true,
 		Prefix: prefix,

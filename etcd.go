@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	pathutil "path"
 	"strconv"
@@ -9,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/pkg/v3/transport"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 const DefaultPrefix = "/chart_backend_bucket"
@@ -18,8 +19,8 @@ const DefaultPrefix = "/chart_backend_bucket"
 var (
 	DefileDialTimeOut    = "5s"
 	TimeStampKey         = "timestamp"
-	ErrNotExistEndpoints = fmt.Errorf("endpoints cannot connect !")
-	ErrNotExist          = fmt.Errorf("not exist!")
+	ErrNotExistEndpoints = errors.New("endpoints cannot connect !")
+	ErrNotExist          = errors.New("not exist!")
 )
 
 type etcdOpts struct {
@@ -38,7 +39,7 @@ type etcdStorage struct {
 	mu     sync.RWMutex
 }
 
-//connection cut off
+// connection cut off
 func isServerErr(err error) bool {
 	if err != nil {
 		if err == context.Canceled {
@@ -52,11 +53,9 @@ func isServerErr(err error) bool {
 	return false
 }
 
-//prapare {basepath} dir
+// prapare {basepath} dir
 func (e *etcdStorage) probe() error {
-	var (
-		err error
-	)
+	var err error
 	ctx, cancel := context.WithCancel(e.ctx)
 	_, err = e.c.Put(ctx, e.base, "")
 	cancel()
@@ -100,13 +99,11 @@ func (e *etcdStorage) delTimeStamp(path string) error {
 	return err
 }
 
-//
 func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
-	var (
-		objs []Object
-	)
+	var objs []Object
 	ctx, cancel := context.WithTimeout(e.ctx, e.opts.dialtimeout)
 	newpath := pathutil.Join(e.base, prefix)
+	newpath = normalizePath(newpath)
 	resps, err := e.c.Get(ctx, newpath, clientv3.WithPrefix())
 	cancel()
 	if err != nil {
@@ -118,7 +115,7 @@ func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
 			if objectPathIsInvalid(path) {
 				continue
 			}
-			//TODO need optimizate
+			// TODO need optimizate
 			if strings.HasSuffix(path, TimeStampKey) {
 				continue
 			}
@@ -134,13 +131,10 @@ func (e *etcdStorage) ListObjects(prefix string) ([]Object, error) {
 		}
 	}
 	return objs, nil
-
 }
 
 func (e *etcdStorage) GetObject(path string) (Object, error) {
-	var (
-		modifytime time.Time
-	)
+	var modifytime time.Time
 	ctx, cancel := context.WithTimeout(e.ctx, e.opts.dialtimeout)
 	newpath := pathutil.Join(e.base, path)
 	resps, err := e.c.Get(ctx, newpath)
@@ -164,9 +158,7 @@ func (e *etcdStorage) GetObject(path string) (Object, error) {
 }
 
 func (e *etcdStorage) PutObject(path string, content []byte) error {
-	var (
-		updatetime = time.Now()
-	)
+	updatetime := time.Now()
 	ctx, cancel := context.WithTimeout(e.ctx, e.opts.dialtimeout)
 	newpath := pathutil.Join(e.base, path)
 	_, err := e.c.Put(ctx, newpath, string(content))
@@ -191,9 +183,7 @@ func (e *etcdStorage) DeleteObject(path string) error {
 }
 
 func parseConf(endpoints string, cafile, certfile, keyfile string, dialtime time.Duration) clientv3.Config {
-	var (
-		es []string
-	)
+	var es []string
 	if endpoints == "" {
 		panic(ErrNotExistEndpoints)
 	}
@@ -215,9 +205,7 @@ func parseConf(endpoints string, cafile, certfile, keyfile string, dialtime time
 }
 
 func NewEtcdCSBackend(endpoints string, cafile, certfile, keyfile string, prefix string) Backend {
-	var (
-		basepath string
-	)
+	var basepath string
 	DialTimeOut, _ := time.ParseDuration(DefileDialTimeOut)
 	cli, err := clientv3.New(parseConf(endpoints, cafile, certfile, keyfile, DialTimeOut))
 	if err != nil {
@@ -249,5 +237,4 @@ func NewEtcdCSBackend(endpoints string, cafile, certfile, keyfile string, prefix
 		panic(err)
 	}
 	return e
-
 }

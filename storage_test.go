@@ -178,6 +178,14 @@ func (suite *StorageTestSuite) TestHasSuffix() {
 	suite.False(o2.HasExtension("tgz"), "object does not have tgz suffix")
 }
 
+func (suite *StorageTestSuite) TestNormalizePath() {
+	suite.Equal("", normalizePath(""), "empty path normalized to empty string")
+	suite.Equal("/", normalizePath("/"), "path with only slash normalized to single slash")
+	suite.Equal("prefix/", normalizePath("prefix"), "path without trailing slash normalized to path with trailing slash")
+	suite.Equal("prefix/", normalizePath("prefix/"), "path with trailing slash remains unchanged")
+	suite.Equal("prefix/sth/", normalizePath("prefix/sth"), "path with subdirectory normalized to path with trailing slash")
+}
+
 func (suite *StorageTestSuite) TestGetObjectSliceDiff() {
 	now := time.Now()
 	os1 := []Object{
