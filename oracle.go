@@ -43,7 +43,6 @@ type OracleCSBackend struct {
 
 // NewOracleCSBackend creates a new instance of OracleCSBackend
 func NewOracleCSBackend(bucket string, prefix string, region string, compartmentId string) *OracleCSBackend {
-
 	var config common.ConfigurationProvider
 	var err error
 
@@ -102,7 +101,6 @@ func NewOracleCSBackend(bucket string, prefix string, region string, compartment
 }
 
 func createBucket(ctx context.Context, c objectstorage.ObjectStorageClient, namespace string, bucket string, compartmentId string) (string, error) {
-
 	// Create the bucket
 	request := objectstorage.CreateBucketRequest{
 		NamespaceName: &namespace,
@@ -115,7 +113,6 @@ func createBucket(ctx context.Context, c objectstorage.ObjectStorageClient, name
 	_, err := c.CreateBucket(ctx, request)
 
 	return bucket, err
-
 }
 
 func getNamespace(ctx context.Context, c objectstorage.ObjectStorageClient) (string, error) {
@@ -131,7 +128,7 @@ func getNamespace(ctx context.Context, c objectstorage.ObjectStorageClient) (str
 // ListObjects lists all objects in OCI Object Storage bucket, at prefix
 func (b OracleCSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
-	prefix = pathutil.Join(b.Prefix, prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 
 	request := objectstorage.ListObjectsRequest{
 		NamespaceName: &b.Namespace,
@@ -181,14 +178,12 @@ func (b OracleCSBackend) GetObject(path string) (Object, error) {
 	}
 
 	rc, err := b.Client.GetObject(b.Context, request)
-
 	if err != nil {
 		return object, err
 	}
 
 	object.LastModified = rc.LastModified.Time
 	content, err := ioutil.ReadAll(rc.Content)
-
 	if err != nil {
 		return object, err
 	}
@@ -198,7 +193,6 @@ func (b OracleCSBackend) GetObject(path string) (Object, error) {
 
 // PutObject uploads an object to OCI Object Storage bucket, at prefix
 func (b OracleCSBackend) PutObject(path string, content []byte) error {
-
 	objectname := pathutil.Join(b.Prefix, path)
 	metadata := make(map[string]string)
 	contentLen := int64(binary.Size(content))
@@ -219,7 +213,6 @@ func (b OracleCSBackend) PutObject(path string, content []byte) error {
 
 // DeleteObject removes an object from OCI Object Storage bucket, at prefix
 func (b OracleCSBackend) DeleteObject(path string) error {
-
 	objectname := pathutil.Join(b.Prefix, path)
 
 	request := objectstorage.DeleteObjectRequest{

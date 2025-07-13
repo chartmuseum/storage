@@ -178,6 +178,24 @@ func (suite *StorageTestSuite) TestHasSuffix() {
 	suite.False(o2.HasExtension("tgz"), "object does not have tgz suffix")
 }
 
+func (suite *StorageTestSuite) TestNormalizePath() {
+	suite.Equal("", normalizePath(""), "empty path normalized to empty string")
+	suite.Equal("/", normalizePath("/"), "path with only slash normalized to single slash")
+	suite.Equal("prefix/", normalizePath("prefix"), "path without trailing slash normalized to path with trailing slash")
+	suite.Equal("prefix/", normalizePath("prefix/"), "path with trailing slash remains unchanged")
+	suite.Equal("prefix/sth/", normalizePath("prefix/sth"), "path with subdirectory normalized to path with trailing slash")
+}
+
+func (suite *StorageTestSuite) TestJoinAndNormalizePrefix() {
+	suite.Equal("base/prefix/", joinAndNormalizePrefix("base", "prefix"), "join base and prefix with normalization")
+	suite.Equal("base/", joinAndNormalizePrefix("base", ""), "join base with empty prefix")
+	suite.Equal("prefix/", joinAndNormalizePrefix("", "prefix"), "join empty base with prefix")
+	suite.Equal("", joinAndNormalizePrefix("", ""), "join empty base and prefix returns empty string")
+	suite.Equal("base/prefix/sub/", joinAndNormalizePrefix("base", "prefix/sub"), "join base with multi-level prefix")
+	suite.Equal("base/prefix/", joinAndNormalizePrefix("base/", "prefix"), "join base with trailing slash and prefix")
+	suite.Equal("base/prefix/", joinAndNormalizePrefix("base", "/prefix"), "join base with prefix starting with slash")
+}
+
 func (suite *StorageTestSuite) TestGetObjectSliceDiff() {
 	now := time.Now()
 	os1 := []Object{
