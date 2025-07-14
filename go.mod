@@ -10,7 +10,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aws/aws-sdk-go v1.47.11
 	github.com/baidubce/bce-sdk-go v0.9.123
-	github.com/gophercloud/gophercloud v0.25.0
+	github.com/gophercloud/gophercloud v1.14.1
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/stretchr/testify v1.8.4
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.35
