@@ -1,8 +1,6 @@
 module github.com/chartmuseum/storage
 
-go 1.23.0
-
-toolchain go1.24.5
+go 1.27.0
 
 require (
 	cloud.google.com/go/storage v1.28.1
