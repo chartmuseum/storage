@@ -50,7 +50,7 @@ func NewAmazonS3Backend(bucket string, prefix string, region string, endpoint st
 		}
 		client = &http.Client{Transport: tr}
 	}
-	service := s3.New(session.New(), &aws.Config{
+	service := s3.New(session.Must(session.NewSession()), &aws.Config{
 		HTTPClient:       client,
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
@@ -84,7 +84,7 @@ func NewAmazonS3BackendWithOptions(bucket string, prefix string, region string, 
 	if options != nil && options.S3ForcePathStyle != nil {
 		s3ForcePathStyle = *options.S3ForcePathStyle
 	}
-	service := s3.New(session.New(), &aws.Config{
+	service := s3.New(session.Must(session.NewSession()), &aws.Config{
 		HTTPClient:       client,
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
@@ -111,7 +111,7 @@ func NewAmazonS3BackendWithCredentials(bucket string, prefix string, region stri
 		}
 		client = &http.Client{Transport: tr}
 	}
-	service := s3.New(session.New(), &aws.Config{
+	service := s3.New(session.Must(session.NewSession()), &aws.Config{
 		HTTPClient:       client,
 		Credentials:      credentials,
 		Region:           aws.String(region),
