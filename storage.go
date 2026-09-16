@@ -18,6 +18,7 @@ package storage
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -95,6 +96,20 @@ func GetObjectSliceDiff(prev []Object, curr []Object, timestampTolerance time.Du
 
 func cleanPrefix(prefix string) string {
 	return strings.Trim(prefix, "/")
+}
+
+// normalizePath ensures a non-empty path ends with a slash
+func normalizePath(path string) string {
+	if path != "" && !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path
+}
+
+// joinAndNormalizePrefix joins base prefix and prefix, then ensures the result ends with a slash
+func joinAndNormalizePrefix(basePrefix, prefix string) string {
+	joined := path.Join(basePrefix, prefix)
+	return normalizePath(joined)
 }
 
 func removePrefixFromObjectPath(prefix string, path string) string {

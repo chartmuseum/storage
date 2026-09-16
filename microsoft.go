@@ -19,10 +19,9 @@ package storage
 import (
 	"errors"
 	"io/ioutil"
+	"os"
 	pathutil "path"
 	"time"
-
-	"os"
 
 	microsoft_storage "github.com/Azure/azure-sdk-for-go/storage"
 )
@@ -39,7 +38,6 @@ type MicrosoftBlobBackend struct {
 
 // NewMicrosoftBlobBackend creates a new instance of MicrosoftBlobBackend
 func NewMicrosoftBlobBackend(container string, prefix string) *MicrosoftBlobBackend {
-
 	// From the Azure portal, get your storage account name and key and set environment variables.
 	accountName, accountKey := os.Getenv("AZURE_STORAGE_ACCOUNT"), os.Getenv("AZURE_STORAGE_ACCESS_KEY")
 	var serviceBaseURL, apiVersion string
@@ -78,7 +76,7 @@ func (b MicrosoftBlobBackend) ListObjects(prefix string) ([]Object, error) {
 	}
 
 	var params microsoft_storage.ListBlobsParameters
-	prefix = pathutil.Join(b.Prefix, prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	params.Prefix = prefix
 
 	for {
