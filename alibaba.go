@@ -53,7 +53,6 @@ func NewAlibabaCloudOSSBackend(bucket string, prefix string, endpoint string, ss
 	}
 
 	client, err := oss.New(endpoint, accessKeyId, accessKeySecret)
-
 	if err != nil {
 		panic("Failed to create OSS client: " + err.Error())
 	}
@@ -76,7 +75,7 @@ func NewAlibabaCloudOSSBackend(bucket string, prefix string, endpoint string, ss
 func (b AlibabaCloudOSSBackend) ListObjects(prefix string) ([]Object, error) {
 	var objects []Object
 
-	prefix = pathutil.Join(b.Prefix, prefix)
+	prefix = joinAndNormalizePrefix(b.Prefix, prefix)
 	ossPrefix := oss.Prefix(prefix)
 	marker := oss.Marker("")
 	for {
@@ -113,7 +112,6 @@ func (b AlibabaCloudOSSBackend) GetObject(path string) (Object, error) {
 	var content []byte
 	key := pathutil.Join(b.Prefix, path)
 	body, err := b.Bucket.GetObject(key)
-
 	if err != nil {
 		return object, err
 	}

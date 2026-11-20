@@ -44,7 +44,6 @@ const (
 
 // NewTencentCloudCOSBackend creates a new instance of TencentCloudCOSBackend
 func NewTencentCloudCOSBackend(bucket string, prefix string, endpoint string) *TencentCloudCOSBackend {
-
 	secretID := os.Getenv("TENCENT_CLOUD_COS_SECRET_ID")
 	secretKey := os.Getenv("TENCENT_CLOUD_COS_SECRET_KEY")
 
@@ -85,10 +84,9 @@ func NewTencentCloudCOSBackend(bucket string, prefix string, endpoint string) *T
 
 // ListObjects lists all objects in Tencent Cloud COS bucket, at prefix
 func (t TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
-
 	var objects []Object
 
-	prefix = pathutil.Join(t.Prefix, prefix)
+	prefix = joinAndNormalizePrefix(t.Prefix, prefix)
 	cosPrefix := prefix
 	cosMarker := ""
 	if cosPrefix != "" {
@@ -133,7 +131,6 @@ func (t TencentCloudCOSBackend) ListObjects(prefix string) ([]Object, error) {
 
 // GetObject retrieves an object from Tencent Cloud COS bucket, at prefix
 func (t TencentCloudCOSBackend) GetObject(path string) (Object, error) {
-
 	var object Object
 	object.Path = path
 
@@ -164,7 +161,6 @@ func (t TencentCloudCOSBackend) GetObject(path string) (Object, error) {
 
 // PutObject uploads an object to Tencent Cloud COS bucket, at prefix
 func (t TencentCloudCOSBackend) PutObject(path string, content []byte) error {
-
 	key := pathutil.Join(t.Prefix, path)
 	var err error
 
@@ -176,7 +172,6 @@ func (t TencentCloudCOSBackend) PutObject(path string, content []byte) error {
 
 // DeleteObject removes an object from Tencent Cloud COS bucket, at prefix
 func (t TencentCloudCOSBackend) DeleteObject(path string) error {
-
 	key := pathutil.Join(t.Prefix, path)
 	_, err := t.Object.Delete(context.Background(), key)
 	return err
